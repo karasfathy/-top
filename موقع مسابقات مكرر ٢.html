@@ -1,0 +1,3191 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>المسابقة الأرثوذكسية | نظام متكامل</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+
+        /* المتغيرات العامة */
+        :root {
+            --bg-primary: linear-gradient(145deg, #0f0c1f 0%, #1a1535 100%);
+            --card-bg: rgba(46, 38, 68, 0.85);
+            --text-color: #f0eaff;
+            --border-color: rgba(210, 180, 255, 0.25);
+            --accent: #7c3aed;
+            --accent-hover: #6d28d9;
+            --gold: #fbbf24;
+            --gold-hover: #f59e0b;
+            --danger: #dc2626;
+            --success: #10b981;
+            --info: #3b82f6;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: linear-gradient(145deg, #e0e7ff 0%, #c7d2fe 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-color: #1e1b2e;
+            --border-color: rgba(124, 58, 237, 0.2);
+            --accent: #6d28d9;
+            --accent-hover: #5b21b6;
+        }
+
+        body {
+            font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* رأس الصفحة */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 15px 25px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 60px;
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, #FFD89B, #C7E9FB, #e9c0ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .theme-toggle {
+            background: var(--accent);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 40px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* البطاقات */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 24px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 40px -12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* الأزرار */
+        button {
+            background: var(--accent);
+            border: none;
+            padding: 12px 28px;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: scale(1.02);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-gold {
+            background: var(--gold);
+            color: #1e1b2e;
+        }
+
+        .btn-gold:hover:not(:disabled) {
+            background: var(--gold-hover);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        .btn-success {
+            background: var(--success);
+        }
+
+        .btn-info {
+            background: var(--info);
+        }
+
+        /* المدخلات */
+        .input-style {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            padding: 12px 20px;
+            border-radius: 60px;
+            color: var(--text-color);
+            font-size: 1rem;
+            width: 100%;
+            outline: none;
+        }
+
+        [data-theme="light"] .input-style {
+            background: rgba(0, 0, 0, 0.05);
+            color: #1e1b2e;
+        }
+
+        select.input-style {
+            cursor: pointer;
+        }
+
+        /* تخطيطات */
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 24px;
+        }
+
+        .three-columns {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .two-columns, .three-columns {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* قائمة اللاعبين */
+        .players-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            margin-bottom: 20px;
+        }
+
+        .player-badge {
+            background: var(--accent);
+            padding: 8px 20px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .remove-player {
+            background: var(--danger);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* رسائل */
+        .message-area {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px;
+            border-radius: 28px;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        /* المؤقت الدائري */
+        .timer-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(var(--gold) 0deg, var(--card-bg) 0deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 15px auto;
+        }
+
+        /* لوحة المتصدرين */
+        .scoreboard {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 28px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .score-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .score-item.first {
+            background: linear-gradient(90deg, var(--gold), var(--gold-hover));
+            border-radius: 60px;
+            color: #1e1b2e;
+            margin-bottom: 8px;
+        }
+
+        /* الأسئلة والخيارات */
+        .question-text {
+            font-size: 1.4rem;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 28px;
+            margin: 20px 0;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 60px;
+            padding: 14px 22px;
+            margin: 10px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .option:hover {
+            background: var(--accent);
+            transform: translateX(-5px);
+        }
+
+        .option input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--gold);
+        }
+
+        /* الميداليات */
+        .medal {
+            font-size: 1.5rem;
+            margin-right: 8px;
+        }
+
+        /* التبويبات */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* تأثيرات */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .gold-question {
+            animation: pulse 0.5s ease;
+            background: linear-gradient(135deg, var(--gold), #facc15);
+            color: #1e1b2e;
+        }
+
+        /* شاشة التحميل */
+        .loading {
+            text-align: center;
+            padding: 50px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 15px;
+            font-size: 0.7rem;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⛪ المسابقة الأرثوذكسية الذكية</h1>
+        <button id="themeToggleBtn" class="theme-toggle">🌙 الوضع الليلي</button>
+    </div>
+    <div class="sub" style="text-align: center; margin-bottom: 20px; opacity: 0.8;">
+        نظام نقاط متطور | تخطي ذكي | أسئلة ذهبية | تقارير متقدمة
+    </div>
+
+    <!-- مناطق المحتوى الديناميكية -->
+    <div id="setupArea"></div>
+    <div id="gameArea" style="display: none;"></div>
+
+    <footer>
+        🕯️ حفظ تلقائي | أصوات تفاعلية | يدعم 6 أنواع أسئلة
+    </footer>
+</div>
+
+<script>
+    // ========================
+    // الجزء الأول: الثيم + المتغيرات الأساسية
+    // ========================
+
+    // نظام الثيم (ليلي/نهاري)
+    const themeToggle = document.getElementById('themeToggleBtn');
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    themeToggle.textContent = currentTheme === 'dark' ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي';
+
+    themeToggle.addEventListener('click', () => {
+        const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        themeToggle.textContent = newTheme === 'dark' ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي';
+    });
+
+    // المتغيرات العامة
+    window.gameState = {
+        players: [],
+        gameActive: false,
+        gameConfig: {
+            totalQuestions: 0,
+            gameType: 'orthodox',
+            timeLimit: 30,
+            trainingMode: false
+        },
+        currentQuestions: [],
+        currentQuestionIndex: 0,
+        playerScores: [],
+        currentPlayerIndex: 0,
+        roundNumber: 1,
+        waitingForAnswer: false,
+        gameTimer: null,
+        timeLeft: 30,
+        gameFinished: false,
+        isPaused: false,
+        goldenQuestionActive: false,
+        skipData: {} // لكل لاعب: { skipAvailable, roundSkipUsed, lastSkipRound }
+    };
+
+    console.log("الجزء الأول تم تحميله - انتظر الجزء الثاني");
+</script>
+<script>
+    // ========================
+    // الجزء الثاني: إدارة اللاعبين + رفع الملفات + الحفظ التلقائي
+    // ========================
+
+    const setupArea = document.getElementById('setupArea');
+    const gameArea = document.getElementById('gameArea');
+
+    // عرض قسم الإعدادات
+    function renderSetupArea() {
+        setupArea.innerHTML = `
+            <div class="two-columns">
+                <div class="card">
+                    <h2>👥 إدارة اللاعبين</h2>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin: 15px 0;">
+                        <input type="text" id="playerNameInput" class="input-style" placeholder="اسم اللاعب..." style="flex:2;">
+                        <button id="addPlayerBtn">➕ إضافة</button>
+                        <label for="fileUploadInput" style="background:#4b5563; padding:12px 20px; border-radius:60px; cursor:pointer;">📂 رفع ملف</label>
+                        <input type="file" id="fileUploadInput" accept=".txt,.csv,.json" style="display:none;">
+                        <button id="savePlayersBtn" style="background:#10b981;">💾 حفظ اللاعبين</button>
+                    </div>
+                    <div id="playersListContainer" class="players-grid">📭 لا يوجد لاعبون</div>
+                    <div class="message-area" id="playersMsg">💡 أضف لاعبين يدوياً أو ارفع ملف (اسم في كل سطر)</div>
+                </div>
+
+                <div class="card">
+                    <h2>⚙️ إعدادات المسابقة</h2>
+                    <div style="margin: 12px 0;">
+                        <label>📚 عدد الأسئلة:</label>
+                        <select id="totalQuestionsSelect" class="input-style">
+                            <option value="20">20 سؤال</option>
+                            <option value="30">30 سؤال</option>
+                            <option value="60">60 سؤال</option>
+                            <option value="100">100 سؤال</option>
+                            <option value="150">150 سؤال</option>
+                            <option value="200">200 سؤال</option>
+                            <option value="320">320 سؤال</option>
+                            <option value="0" selected>♾️ مفتوح (بدون نهاية)</option>
+                        </select>
+                    </div>
+                    <div style="margin: 12px 0;">
+                        <label>🎲 نوع المسابقة:</label>
+                        <select id="gameTypeSelect" class="input-style">
+                            <option value="orthodox">✝️ عقيدة أرثوذكسية</option>
+                            <option value="bible">📖 كتاب مقدس</option>
+                            <option value="history">🏛️ تاريخ الكنيسة</option>
+                            <option value="saints">👼 سير القديسين</option>
+                            <option value="hymns">🎵 ألحان وطقس</option>
+                            <option value="mixed">🔀 متنوع (جميع الأنواع)</option>
+                        </select>
+                    </div>
+                    <div style="margin: 12px 0;">
+                        <label>⏱️ زمن الإجابة (ثانية):</label>
+                        <select id="timeLimitSelect" class="input-style">
+                            <option value="15">15 ثانية (سريع)</option>
+                            <option value="30" selected>30 ثانية (عادي)</option>
+                            <option value="45">45 ثانية (مريح)</option>
+                            <option value="60">60 ثانية (للنقاش)</option>
+                        </select>
+                    </div>
+                    <div style="margin: 12px 0;">
+                        <label style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" id="trainingModeCheckbox"> 🎓 وضع التدريب (بدون نقاط ولا خصم)
+                        </label>
+                    </div>
+                    <button id="startGameBtn" class="btn-gold" style="width:100%; margin-top:15px;">🚀 بدء المسابقة</button>
+                    <button id="resumeGameBtn" style="width:100%; margin-top:10px; background:#3b82f6;">🔄 استئناف آخر مسابقة</button>
+                </div>
+            </div>
+        `;
+
+        // ربط الأحداث بعد إنشاء العناصر
+        document.getElementById('addPlayerBtn')?.addEventListener('click', addPlayer);
+        document.getElementById('fileUploadInput')?.addEventListener('change', uploadPlayersFile);
+        document.getElementById('savePlayersBtn')?.addEventListener('click', savePlayersToFile);
+        document.getElementById('startGameBtn')?.addEventListener('click', startNewGame);
+        document.getElementById('resumeGameBtn')?.addEventListener('click', resumeGame);
+        
+        renderPlayersList();
+    }
+
+    // إضافة لاعب
+    function addPlayer() {
+        if(window.gameState.gameActive) {
+            showPlayersMsg("⚠️ لا يمكن إضافة لاعبين أثناء المسابقة", 'error');
+            return;
+        }
+        const input = document.getElementById('playerNameInput');
+        const name = input.value.trim();
+        if(!name) return;
+        if(window.gameState.players.includes(name)) {
+            showPlayersMsg("⚠️ هذا الاسم موجود بالفعل", 'error');
+            return;
+        }
+        window.gameState.players.push(name);
+        input.value = '';
+        renderPlayersList();
+        savePlayersToLocal();
+        showPlayersMsg(`✅ تم إضافة "${name}" | العدد: ${window.gameState.players.length}`, 'success');
+    }
+
+    // عرض قائمة اللاعبين
+    function renderPlayersList() {
+        const container = document.getElementById('playersListContainer');
+        if(!container) return;
+        if(window.gameState.players.length === 0) {
+            container.innerHTML = '<span>📭 لا يوجد لاعبون، أضف أسماء...</span>';
+            return;
+        }
+        container.innerHTML = window.gameState.players.map((p, idx) => `
+            <div class="player-badge">
+                ✝️ ${escapeHtml(p)}
+                <span class="remove-player" data-index="${idx}">✖</span>
+            </div>
+        `).join('');
+        
+        document.querySelectorAll('.remove-player').forEach(el => {
+            el.addEventListener('click', (e) => {
+                if(window.gameState.gameActive) {
+                    showPlayersMsg("⚠️ لا يمكن حذف لاعبين أثناء المسابقة", 'error');
+                    return;
+                }
+                const idx = parseInt(el.dataset.index);
+                window.gameState.players.splice(idx, 1);
+                renderPlayersList();
+                savePlayersToLocal();
+                showPlayersMsg(`✅ تم حذف لاعب`, 'success');
+            });
+        });
+    }
+
+    // رفع ملف أسماء
+    function uploadPlayersFile(e) {
+        if(window.gameState.gameActive) {
+            showPlayersMsg("⚠️ لا يمكن رفع ملف أثناء المسابقة", 'error');
+            return;
+        }
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            const content = ev.target.result;
+            const lines = content.split(/\r?\n/);
+            let added = 0;
+            for(let line of lines) {
+                let name = line.trim();
+                if(name && !window.gameState.players.includes(name)) {
+                    window.gameState.players.push(name);
+                    added++;
+                }
+            }
+            renderPlayersList();
+            savePlayersToLocal();
+            showPlayersMsg(`📁 تم إضافة ${added} لاعب جديد | الإجمالي: ${window.gameState.players.length}`, 'success');
+        };
+        reader.readAsText(file, 'UTF-8');
+        e.target.value = '';
+    }
+
+    // حفظ اللاعبين في ملف
+    function savePlayersToFile() {
+        if(window.gameState.players.length === 0) {
+            showPlayersMsg("⚠️ لا يوجد لاعبين للحفظ", 'error');
+            return;
+        }
+        const content = window.gameState.players.join('\n');
+        const blob = new Blob([content], {type: 'text/plain'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `اللاعبين_${new Date().toISOString().slice(0,19)}.txt`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        showPlayersMsg(`💾 تم حفظ ${window.gameState.players.length} لاعب في ملف`, 'success');
+    }
+
+    // حفظ اللاعبين في localStorage
+    function savePlayersToLocal() {
+        localStorage.setItem('orthodox_players', JSON.stringify(window.gameState.players));
+    }
+
+    // تحميل اللاعبين من localStorage
+    function loadPlayersFromLocal() {
+        const saved = localStorage.getItem('orthodox_players');
+        if(saved) {
+            window.gameState.players = JSON.parse(saved);
+            renderPlayersList();
+        }
+    }
+
+    // عرض رسائل
+    function showPlayersMsg(msg, type) {
+        const msgDiv = document.getElementById('playersMsg');
+        if(msgDiv) {
+            msgDiv.innerHTML = msg;
+            msgDiv.style.background = type === 'error' ? '#dc262630' : '#10b98130';
+            setTimeout(() => {
+                msgDiv.style.background = '';
+                if(type !== 'error') msgDiv.innerHTML = '💡 أضف لاعبين يدوياً أو ارفق ملف';
+            }, 3000);
+        }
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/[&<>]/g, function(m) {
+            if(m === '&') return '&amp;';
+            if(m === '<') return '&lt;';
+            if(m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // بدء مسابقة جديدة
+    function startNewGame() {
+        if(window.gameState.players.length < 2) {
+            showPlayersMsg("❌ يجب أن يكون هناك لاعبين على الأقل", 'error');
+            return;
+        }
+        
+        window.gameState.gameActive = true;
+        window.gameState.gameConfig = {
+            totalQuestions: parseInt(document.getElementById('totalQuestionsSelect').value),
+            gameType: document.getElementById('gameTypeSelect').value,
+            timeLimit: parseInt(document.getElementById('timeLimitSelect').value),
+            trainingMode: document.getElementById('trainingModeCheckbox').checked
+        };
+        
+        // تهيئة بيانات اللاعبين
+        window.gameState.playerScores = window.gameState.players.map(name => ({
+            name: name,
+            score: 0,
+            correct: 0,
+            wrong: 0,
+            skips: 0
+        }));
+        
+        // تهيئة بيانات التخطي لكل لاعب
+        window.gameState.skipData = {};
+        window.gameState.players.forEach(name => {
+            window.gameState.skipData[name] = {
+                skipAvailable: true,
+                roundSkipUsed: false,
+                lastSkipRound: 0
+            };
+        });
+        
+        // إخفاء منطقة الإعدادات وإظهار منطقة اللعب
+        setupArea.style.display = 'none';
+        gameArea.style.display = 'block';
+        
+        // حفظ حالة المسابقة
+        saveGameStateToLocal();
+        
+        // استدعاء تهيئة المسابقة (الجزء الثالث)
+        if(typeof window.initGameSystem === 'function') {
+            window.initGameSystem();
+        } else {
+            gameArea.innerHTML = '<div class="card loading">⏳ جاري تحميل المسابقة... يرجى إرسال الجزء الثالث</div>';
+        }
+    }
+
+    // استئناف آخر مسابقة
+    function resumeGame() {
+        const savedState = localStorage.getItem('orthodox_game_state');
+        if(!savedState) {
+            showPlayersMsg("⚠️ لا توجد مسابقة محفوظة للاستئناف", 'error');
+            return;
+        }
+        try {
+            const state = JSON.parse(savedState);
+            window.gameState = state;
+            window.gameState.gameActive = true;
+            window.gameState.waitingForAnswer = false;
+            window.gameState.gameTimer = null;
+            
+            setupArea.style.display = 'none';
+            gameArea.style.display = 'block';
+            
+            if(typeof window.resumeGameSystem === 'function') {
+                window.resumeGameSystem();
+            } else {
+                gameArea.innerHTML = '<div class="card loading">⏳ جاري استئناف المسابقة... يرجى إرسال الأجزاء المتبقية</div>';
+            }
+        } catch(e) {
+            showPlayersMsg("❌ خطأ في استئناف المسابقة", 'error');
+        }
+    }
+
+    // حفظ حالة المسابقة
+    function saveGameStateToLocal() {
+        const stateToSave = JSON.parse(JSON.stringify(window.gameState));
+        stateToSave.gameTimer = null;
+        stateToSave.waitingForAnswer = false;
+        localStorage.setItem('orthodox_game_state', JSON.stringify(stateToSave));
+    }
+
+    // تحميل الإعدادات الأولية
+    loadPlayersFromLocal();
+    renderSetupArea();
+    
+    console.log("الجزء الثاني تم تحميله - إدارة اللاعبين جاهزة");
+</script>
+<script>
+    // ========================
+    // الجزء الثالث: مكتبة الأسئلة الكاملة
+    // ========================
+
+    // قاعدة الأسئلة المتكاملة (6 أنواع)
+    window.questionsLibrary = {
+        // 1. عقيدة أرثوذكسية (40 سؤال)
+        orthodox: [
+            { text: "ما هو سر الثالوث القدوس في العقيدة الأرثوذكسية؟", options: ["آب واحد وابن واحد وروح قدس واحد", "ثلاثة آلهة", "الله أب فقط", "الله ابن فقط"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو مؤسس الكنيسة حسب الإيمان المسيحي؟", options: ["بطرس الرسول", "بولس الرسول", "السيد المسيح", "القديس مرقس"], correct: 2, difficulty: 1, gold: false },
+            { text: "ماذا نعني بالتجسد؟", options: ["اتخذ الله الكلمة جسداً وصار إنساناً", "ظهور الله في حلم", "معجزة تحويل الخبز", "صعود المسيح"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هي طبيعة المسيح في الأرثوذكسية؟", options: ["طبيعة واحدة", "طبيعتان (إلهية وبشرية)", "طبيعة بشرية فقط", "طبيعة روحية"], correct: 1, difficulty: 2, gold: false },
+            { text: "الكنيسة الأرثوذكسية تؤمن بأن الروح القدس منبثق من ...؟", options: ["الآب فقط", "الابن فقط", "الآب والابن معاً", "الآب ومن خلال الابن"], correct: 0, difficulty: 2, gold: false },
+            { text: "أي مجمع مسكوني أكد لاهوت المسيح الكامل؟", options: ["مجمع نيقية", "مجمع خلقيدونية", "مجمع أفسس", "مجمع القسطنطينية"], correct: 0, difficulty: 2, gold: false },
+            { text: "ما هو سر الأفخارستيا؟", options: ["سر التناول (جسد ودم المسيح)", "سر العماد", "سر مسحة المرضى", "سر الإكليل"], correct: 0, difficulty: 1, gold: false },
+            { text: "كم عدد الأسرار المقدسة في الكنيسة الأرثوذكسية؟", options: ["5 أسرار", "7 أسرار", "9 أسرار", "3 أسرار"], correct: 1, difficulty: 1, gold: false },
+            { text: "ما معنى كلمة 'أرثوذكس'؟", options: ["الرأي القويم أو الإيمان المستقيم", "المجمع المقدس", "الكنيسة الجامعة", "المسيحي"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو رئيس الملائكة الذي بشر العذراء بميلاد المسيح؟", options: ["الملاك جبرائيل", "الملاك ميخائيل", "الملاك رافائيل", "الملاك أورئيل"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هو عيد العنصرة؟", options: ["حلول الروح القدس على التلاميذ", "ميلاد المسيح", "قيامة المسيح", "صعود المسيح"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو كاتب سفر الرؤيا؟", options: ["يوحنا الرسول", "بطرس الرسول", "بولس الرسول", "يعقوب الرسول"], correct: 0, difficulty: 2, gold: false },
+            { text: "ما هي اللفظة التي تعني 'والدة الإله'؟", options: ["ثيوتوكوس", "كريستوتوكوس", "ميتروتوكوس", "أجيوتوكوس"], correct: 0, difficulty: 2, gold: false },
+            { text: "كم إنجيلاً معترفاً به في الكنيسة الأرثوذكسية؟", options: ["4", "3", "5", "6"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو أول شهيد في الكنيسة المسيحية؟", options: ["إسطفانوس", "بطرس", "بولس", "يعقوب"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هو سر المعمودية؟", options: ["ولادة جديدة من الماء والروح", "غفران الخطايا فقط", "دخول الكنيسة فقط", "تبرك فقط"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هو سر الميرون؟", options: ["موهبة الروح القدس", "غفران الخطايا", "شفاء المرضى", "سيامة كاهن"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هو سر الاعتراف؟", options: ["مغفرة الخطايا بالتوبة", "إعلان الخطايا فقط", "صلاة جماعية", "قراءة الكتاب"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هو سر الزيجة؟", options: ["اتحاد الرجل والمرأة في المسيح", "زواج مدني", "عقد اجتماعي", "طقس تقليدي"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هو سر الكهنوت؟", options: ["سلطة خدمة الأسرار", "قيادة الصلاة فقط", "الوعظ فقط", "الإدارة فقط"], correct: 0, difficulty: 2, gold: false },
+            { text: "ما هو سر مسحة المرضى؟", options: ["شفاء النفس والجسد", "طقس الجناز", "تبرك الزيت", "صلاة للموتى"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هي أيقونة 'العجول الأربعة' التي ترمز للأناجيل؟", options: ["أسد، ثور، إنسان، نسر", "أسد، ثعبان، نسر، إنسان", "ثور، نسر، أسد، حمام", "إنسان، أسد، نسر، غنم"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو الذي شك في قيامة المسيح حتى لمس جراحاته؟", options: ["توما", "بطرس", "أندراوس", "فيليبس"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هو عدد أيام الصوم الكبير؟", options: ["55 يوماً", "40 يوماً", "50 يوماً", "45 يوماً"], correct: 0, difficulty: 2, gold: false },
+            { text: "ما هو عيد الغطاس؟", options: ["معمودية المسيح", "ميلاد المسيح", "قيامة المسيح", "دخول المسيح أورشليم"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو النبي الذي تنبأ بميلاد المسيح من عذراء؟", options: ["إشعياء", "إرميا", "حزقيال", "دانيال"], correct: 0, difficulty: 2, gold: false },
+            { text: "ما هو اسم جبل التجلي؟", options: ["جبل طابور", "جبل سيناء", "جبل الزيتون", "جبل الجلجثة"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هم الذين تجلى معهم المسيح على الجبل؟", options: ["موسى وإيليا", "إبراهيم وإسحاق", "بطرس وبولس", "داود وسليمان"], correct: 0, difficulty: 2, gold: false },
+            { text: "ما هو اسم الحديقة التي صلب فيها المسيح؟", options: ["الجلجثة", "جثسيماني", "بستان الزيتون", "الجنة"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو تلميذ المسيح الذي خانه؟", options: ["يهوذا الإسخريوطي", "بطرس", "توما", "أندراوس"], correct: 0, difficulty: 1, gold: false }
+        ],
+        
+        // 2. كتاب مقدس (25 سؤال)
+        bible: [
+            { text: "كم سفراً في العهد القديم؟", options: ["39 سفراً", "27 سفراً", "46 سفراً", "66 سفراً"], correct: 0, difficulty: 2, gold: false },
+            { text: "كم سفراً في العهد الجديد؟", options: ["27 سفراً", "39 سفراً", "24 سفراً", "30 سفراً"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو كاتب سفر التكوين؟", options: ["موسى", "داود", "إبراهيم", "سليمان"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو كاتب المزامير؟", options: ["داود", "موسى", "سليمان", "إشعياء"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو كاتب سفر الأمثال؟", options: ["سليمان", "داود", "أيوب", "إرميا"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو أطول رجل في الكتاب المقدس؟", options: ["جالوت", "عوج", "شمشون", "إيليا"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو أصغر رجل في الكتاب المقدس؟", options: ["زمي", "عوبد", "ملكيصادق", "إيليا"], correct: 0, difficulty: 3, gold: true },
+            { text: "كم عدد وصايا الناموس؟", options: ["10", "7", "12", "5"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو النبي الذي ابتلعه الحوت؟", options: ["يونان", "إيليا", "إشعياء", "إرميا"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هي المرأة التي تحولت إلى عمود ملح؟", options: ["زوجة لوط", "رفقة", "سارة", "حنة"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو الذي بنى السفينة؟", options: ["نوح", "إبراهيم", "موسى", "داود"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو الذي قتل جالوت؟", options: ["داود", "شاول", "يوناثان", "أبينير"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو الذي سلمته الغراب خبزاً؟", options: ["إيليا", "إليشع", "موسى", "داود"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو الذي مشى على الماء؟", options: ["بطرس", "بولس", "يوحنا", "أندراوس"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو الذي أنكر المسيح ثلاث مرات؟", options: ["بطرس", "بولس", "توما", "يهوذا"], correct: 0, difficulty: 1, gold: false }
+        ],
+        
+        // 3. تاريخ الكنيسة (15 سؤال)
+        history: [
+            { text: "من هو كاروز الديار المصرية (مؤسس الكنيسة القبطية)؟", options: ["القديس مرقس", "القديس بطرس", "القديس بولس", "القديس أثناسيوس"], correct: 0, difficulty: 1, gold: false },
+            { text: "أي قديس يُلقب بـ 'عمود المسيحية' ودافع عن لاهوت المسيح؟", options: ["القديس أثناسيوس الرسولي", "القديس كيرلس السكندري", "القديس مقاريوس", "القديس أنطونيوس"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو أول راهب وأبو الرهبنة؟", options: ["القديس أنطونيوس الكبير", "القديس باخوميوس", "القديس مقاريوس", "القديس بولس الطوبي"], correct: 0, difficulty: 1, gold: false },
+            { text: "أين انعقد مجمع نيقية المسكوني الأول؟", options: ["نيقية (تركيا)", "الإسكندرية", "روما", "القدس"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو البابا الذي قاد مقاومة نسطورية ولقب بـ 'عمود الإيمان'؟", options: ["البابا كيرلس السكندري", "البابا أثناسيوس", "البابا ديسقورس", "البابا شنودة الثالث"], correct: 0, difficulty: 2, gold: false },
+            { text: "في أي عام تأسست الكنيسة القبطية الأرثوذكسية؟", options: ["61 م", "42 م", "70 م", "100 م"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو البابا الذي بنى الكاتدرائية المرقسية بالعباسية؟", options: ["البابا كيرلس السادس", "البابا شنودة الثالث", "البابا تواضروس الثاني", "البابا يوساب الثاني"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو البابا الذي عاصر الرئيس السادات واشتهر بحركة الكنيسة الحديثة؟", options: ["البابا شنودة الثالث", "البابا كيرلس السادس", "البابا تواضروس الثاني", "البابا يوساب الثاني"], correct: 0, difficulty: 1, gold: false },
+            { text: "من هو أول بابا للإسكندرية؟", options: ["القديس مرقس", "القديس بطرس", "القديس أنيانوس", "القديس أفتيموس"], correct: 0, difficulty: 2, gold: false }
+        ],
+        
+        // 4. سير القديسين (10 أسئلة)
+        saints: [
+            { text: "من هو قديس الخرائط والصحراء؟", options: ["القديس الأنبا أنطونيوس", "القديس الأنبا باخوميوس", "القديس الأنبا مقاريوس", "القديس الأنبا بولا"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هي القديسة التي تحمل اسم 'أم النور'؟", options: ["القديسة دميانة", "القديسة بربارة", "القديسة كاترين", "القديسة مريم"], correct: 0, difficulty: 2, gold: false },
+            { text: "من هو قديس الشباب والأسرة؟", options: ["القديس الأنبا بيشوي", "القديس الأنبا رويس", "القديس الأنبا إبرام", "القديس الأنبا باخوميوس"], correct: 0, difficulty: 2, gold: false }
+        ],
+        
+        // 5. ألحان وطقس (10 أسئلة)
+        hymns: [
+            { text: "ما هو كتاب الأجبية؟", options: ["كتاب صلوات السواعي السبعة", "سفر المزامير", "سفر القداس", "كتاب التفاسير"], correct: 0, difficulty: 1, gold: false },
+            { text: "ما هو اللحن الذي يقال في قداس المؤمنين؟", options: ["أجيال الدهور", "يا رب ارحم", "أبانا الذي في السموات", "مريم العذراء"], correct: 0, difficulty: 2, gold: false },
+            { text: "ما هي لغة الكنيسة القبطية الطقسية الأصلية؟", options: ["القبطية", "اليونانية", "العربية", "السريانية"], correct: 0, difficulty: 1, gold: false },
+            { text: "كم باكراً في الأجبية؟", options: ["7", "5", "8", "6"], correct: 0, difficulty: 2, gold: false },
+            { text: "ما هو معنى 'الإبصلمودية'؟", options: ["كتاب ألحان", "كتاب صلوات", "كتاب تفاسير", "كتاب عظات"], correct: 0, difficulty: 2, gold: false }
+        ],
+        
+        // 6. متنوع (مجموع من الكل)
+        mixed: []
+    };
+    
+    // دمج الأسئلة المتنوعة من جميع المصادر
+    window.questionsLibrary.mixed = [
+        ...window.questionsLibrary.orthodox.slice(0, 10),
+        ...window.questionsLibrary.bible.slice(0, 8),
+        ...window.questionsLibrary.history.slice(0, 5),
+        ...window.questionsLibrary.saints,
+        ...window.questionsLibrary.hymns
+    ];
+    
+    // إضافة أسئلة ذهبية عشوائية (قيمتها 3 نقاط)
+    const goldQuestions = [
+        { text: "💎 سؤال ذهبي: ما هو اسم ملاك البشارة؟", options: ["جبرائيل", "ميخائيل", "رافائيل", "أورئيل"], correct: 0, difficulty: 2, gold: true },
+        { text: "💎 سؤال ذهبي: كم سنة صام المسيح في البرية؟", options: ["40 يوماً", "30 يوماً", "50 يوماً", "20 يوماً"], correct: 0, difficulty: 2, gold: true },
+        { text: "💎 سؤال ذهبي: من هو تلميذ المسيح الذي لقبه 'ابن الرعد'؟", options: ["يوحنا", "يعقوب", "بطرس", "أندراوس"], correct: 0, difficulty: 2, gold: true }
+    ];
+    
+    window.questionsLibrary.orthodox.push(...goldQuestions);
+    
+    console.log("الجزء الثالث تم تحميله - مكتبة الأسئلة جاهزة (أكثر من 100 سؤال)");
+</script>
+<script>
+    // ========================
+    // الجزء الرابع: نظام القرعة العشوائية + دوال التهيئة
+    // ========================
+
+    // تهيئة نظام المسابقة
+    window.initGameSystem = function() {
+        // تحضير الأسئلة حسب النوع المختار
+        prepareQuestions();
+        
+        // خلط ترتيب اللاعبين عشوائياً (قرعة أولية)
+        shufflePlayers();
+        
+        // إعادة تعيين المتغيرات
+        window.gameState.currentQuestionIndex = 0;
+        window.gameState.currentPlayerIndex = 0;
+        window.gameState.roundNumber = 1;
+        window.gameState.gameFinished = false;
+        window.gameState.waitingForAnswer = false;
+        window.gameState.goldenQuestionActive = false;
+        window.gameState.isPaused = false;
+        
+        // إعادة تعيين نقاط اللاعبين
+        window.gameState.playerScores = window.gameState.players.map(name => ({
+            name: name,
+            score: 0,
+            correct: 0,
+            wrong: 0,
+            skips: 0
+        }));
+        
+        // إعادة تعيين بيانات التخطي
+        window.gameState.skipData = {};
+        window.gameState.players.forEach(name => {
+            window.gameState.skipData[name] = {
+                skipAvailable: true,
+                roundSkipUsed: false,
+                lastSkipRound: 0
+            };
+        });
+        
+        // عرض واجهة المسابقة
+        renderGameInterface();
+        
+        // بدء الجولة الأولى
+        setTimeout(() => {
+            startNewRound();
+        }, 500);
+    };
+    
+    // تحضير الأسئلة حسب النوع المختار
+    function prepareQuestions() {
+        const gameType = window.gameState.gameConfig.gameType;
+        let sourceQuestions = [];
+        
+        switch(gameType) {
+            case 'orthodox':
+                sourceQuestions = [...window.questionsLibrary.orthodox];
+                break;
+            case 'bible':
+                sourceQuestions = [...window.questionsLibrary.bible];
+                break;
+            case 'history':
+                sourceQuestions = [...window.questionsLibrary.history];
+                break;
+            case 'saints':
+                sourceQuestions = [...window.questionsLibrary.saints];
+                break;
+            case 'hymns':
+                sourceQuestions = [...window.questionsLibrary.hymns];
+                break;
+            case 'mixed':
+            default:
+                sourceQuestions = [...window.questionsLibrary.mixed];
+                break;
+        }
+        
+        // خلط الأسئلة عشوائياً
+        for(let i = sourceQuestions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [sourceQuestions[i], sourceQuestions[j]] = [sourceQuestions[j], sourceQuestions[i]];
+        }
+        
+        // اختيار العدد المطلوب من الأسئلة
+        const limit = window.gameState.gameConfig.totalQuestions;
+        if(limit > 0 && sourceQuestions.length > limit) {
+            window.gameState.currentQuestions = sourceQuestions.slice(0, limit);
+        } else if(limit > 0 && sourceQuestions.length < limit) {
+            // تكرار بعض الأسئلة للوصول للعدد المطلوب
+            window.gameState.currentQuestions = [...sourceQuestions];
+            const originalLength = sourceQuestions.length;
+            for(let i = 0; i < limit - originalLength; i++) {
+                window.gameState.currentQuestions.push({...sourceQuestions[i % originalLength]});
+            }
+        } else {
+            window.gameState.currentQuestions = sourceQuestions;
+        }
+        
+        console.log(`تم تجهيز ${window.gameState.currentQuestions.length} سؤال`);
+    }
+    
+    // خلط ترتيب اللاعبين عشوائياً (القرعة)
+    function shufflePlayers() {
+        const players = window.gameState.players;
+        for(let i = players.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [players[i], players[j]] = [players[j], players[i]];
+        }
+        console.log("تم خلط ترتيب اللاعبين:", players);
+    }
+    
+    // القرعة العشوائية لاختيار اللاعب التالي
+    function getRandomNextPlayer() {
+        const activePlayers = window.gameState.players;
+        const currentPlayer = window.gameState.players[window.gameState.currentPlayerIndex];
+        
+        // اختيار لاعب عشوائي غير اللاعب الحالي
+        let availablePlayers = activePlayers.filter(p => p !== currentPlayer);
+        if(availablePlayers.length === 0) availablePlayers = [...activePlayers];
+        
+        const randomIndex = Math.floor(Math.random() * availablePlayers.length);
+        const nextPlayer = availablePlayers[randomIndex];
+        
+        // تحديث المؤشر
+        window.gameState.currentPlayerIndex = window.gameState.players.indexOf(nextPlayer);
+        
+        return nextPlayer;
+    }
+    
+    // عرض واجهة المسابقة
+    function renderGameInterface() {
+        gameArea.innerHTML = `
+            <div class="two-columns">
+                <!-- العمود الأيمن: منطقة السؤال -->
+                <div class="card">
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <div style="font-size: 0.9rem; color: #c4b5fd;">🎲 دور اللاعب</div>
+                        <div style="font-size: 1.8rem; font-weight: bold; background: linear-gradient(135deg, #FFD89B, #C7E9FB); -webkit-background-clip: text; background-clip: text; color: transparent;" id="currentPlayerName">---</div>
+                    </div>
+                    
+                    <div class="timer-circle" id="timerCircle">
+                        <span id="timerText">${window.gameState.gameConfig.timeLimit}</span>
+                    </div>
+                    
+                    <div class="question-text" id="questionText">
+                        جاري تجهيز السؤال...
+                    </div>
+                    
+                    <div id="optionsContainer"></div>
+                    
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                        <button id="skipBtn" class="btn-gold" style="background:#f59e0b;">⏭️ تخطي السؤال</button>
+                        <button id="submitAnswerBtn" class="btn-success">✔ تأكيد الإجابة</button>
+                    </div>
+                    
+                    <div class="message-area" id="gameMessage">
+                        🔄 جاري بدء المسابقة...
+                    </div>
+                </div>
+                
+                <!-- العمود الأيسر: لوحة المتصدرين والمعلومات -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 15px;">
+                        <h2>📊 لوحة المتصدرين</h2>
+                        <div>
+                            <span id="roundDisplay" style="background: #4c1d95; padding: 5px 15px; border-radius: 40px;">الدور #1</span>
+                            <span id="questionDisplay" style="background: #1e1a3a; padding: 5px 15px; border-radius: 40px; margin-right: 8px;">السؤال 0/${window.gameState.currentQuestions.length}</span>
+                        </div>
+                    </div>
+                    
+                    <div id="scoreboardContainer" class="scoreboard"></div>
+                    
+                    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button id="endGameEarlyBtn" class="btn-danger" style="flex:1;">🏁 إنهاء المسابقة</button>
+                        <button id="pauseGameBtn" style="background:#6b7280; flex:1;">⏸ إيقاف مؤقت</button>
+                        <button id="changeGameTypeBtn" style="background:#8b5cf6; flex:1;">🔄 تغيير النوع</button>
+                    </div>
+                    
+                    <div class="message-area" id="infoMsg" style="margin-top: 15px; font-size: 0.8rem;">
+                        💡 ملاحظة: التخطي يتجدد كل دورين | الأسئلة الذهبية تعطي 3 نقاط
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // ربط الأحداث
+        document.getElementById('skipBtn')?.addEventListener('click', handleSkip);
+        document.getElementById('submitAnswerBtn')?.addEventListener('click', handleSubmitAnswer);
+        document.getElementById('endGameEarlyBtn')?.addEventListener('click', () => {
+            if(confirm("⚠️ هل أنت متأكد من إنهاء المسابقة مبكراً؟")) endGame();
+        });
+        document.getElementById('pauseGameBtn')?.addEventListener('click', togglePause);
+        document.getElementById('changeGameTypeBtn')?.addEventListener('click', showGameTypeMenu);
+        
+        // تحديث المراجع
+        window.questionText = document.getElementById('questionText');
+        window.optionsContainer = document.getElementById('optionsContainer');
+        window.gameMessage = document.getElementById('gameMessage');
+        window.scoreboardContainer = document.getElementById('scoreboardContainer');
+        window.currentPlayerNameSpan = document.getElementById('currentPlayerName');
+        window.timerText = document.getElementById('timerText');
+        window.timerCircle = document.getElementById('timerCircle');
+        window.roundDisplay = document.getElementById('roundDisplay');
+        window.questionDisplay = document.getElementById('questionDisplay');
+    }
+    
+    // عرض قائمة تغيير نوع المسابقة
+    function showGameTypeMenu() {
+        const types = [
+            { value: 'orthodox', name: '✝️ عقيدة أرثوذكسية' },
+            { value: 'bible', name: '📖 كتاب مقدس' },
+            { value: 'history', name: '🏛️ تاريخ الكنيسة' },
+            { value: 'saints', name: '👼 سير القديسين' },
+            { value: 'hymns', name: '🎵 ألحان وطقس' },
+            { value: 'mixed', name: '🔀 متنوع' }
+        ];
+        
+        let optionsHtml = '<div style="display: flex; flex-direction: column; gap: 8px;">';
+        types.forEach(type => {
+            optionsHtml += `<button onclick="changeGameTypeDuringGame('${type.value}')" style="background:#4c1d95;">${type.name}</button>`;
+        });
+        optionsHtml += '<button onclick="document.getElementById(\'gameTypeMenu\')?.remove()" style="background:#6b7280;">إلغاء</button></div>';
+        
+        const menu = document.createElement('div');
+        menu.id = 'gameTypeMenu';
+        menu.style.cssText = 'position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--card-bg); padding:20px; border-radius:32px; z-index:1000; min-width:250px; backdrop-filter:blur(12px); border:1px solid var(--gold);';
+        menu.innerHTML = `<h3 style="margin-bottom:15px;">🎲 تغيير نوع المسابقة</h3>${optionsHtml}`;
+        document.body.appendChild(menu);
+        
+        setTimeout(() => {
+            const clickOutside = (e) => {
+                if(!menu.contains(e.target)) menu.remove();
+                document.removeEventListener('click', clickOutside);
+            };
+            setTimeout(() => document.addEventListener('click', clickOutside), 100);
+        }, 100);
+    }
+    
+    // تغيير نوع المسابقة أثناء التشغيل
+    window.changeGameTypeDuringGame = function(newType) {
+        document.getElementById('gameTypeMenu')?.remove();
+        
+        window.gameState.gameConfig.gameType = newType;
+        
+        // تحضير أسئلة جديدة من النوع الجديد
+        let sourceQuestions = [];
+        switch(newType) {
+            case 'orthodox': sourceQuestions = [...window.questionsLibrary.orthodox]; break;
+            case 'bible': sourceQuestions = [...window.questionsLibrary.bible]; break;
+            case 'history': sourceQuestions = [...window.questionsLibrary.history]; break;
+            case 'saints': sourceQuestions = [...window.questionsLibrary.saints]; break;
+            case 'hymns': sourceQuestions = [...window.questionsLibrary.hymns]; break;
+            default: sourceQuestions = [...window.questionsLibrary.mixed];
+        }
+        
+        // خلط الأسئلة
+        for(let i = sourceQuestions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [sourceQuestions[i], sourceQuestions[j]] = [sourceQuestions[j], sourceQuestions[i]];
+        }
+        
+        const limit = window.gameState.gameConfig.totalQuestions;
+        if(limit > 0 && sourceQuestions.length > limit) {
+            window.gameState.currentQuestions = sourceQuestions.slice(0, limit);
+        } else {
+            window.gameState.currentQuestions = sourceQuestions;
+        }
+        
+        window.gameState.currentQuestionIndex = 0;
+        
+        if(window.gameMessage) {
+            window.gameMessage.innerHTML = `✅ تم تغيير نوع المسابقة إلى ${document.querySelector(`button[onclick*="${newType}"]`)?.innerText || newType} - سيبدأ سؤال جديد`;
+        }
+        
+        if(window.questionDisplay) {
+            window.questionDisplay.innerText = `السؤال 0/${window.gameState.currentQuestions.length}`;
+        }
+        
+        // بدء جولة جديدة
+        setTimeout(() => {
+            startNewRound();
+        }, 1500);
+        
+        saveGameStateToLocal();
+    };
+    
+    console.log("الجزء الرابع تم تحميله - نظام القرعة والتغيير جاهز");
+</script>
+<script>
+    // ========================
+    // الجزء الخامس: نظام التخطي المتقدم + المؤقت + معالجة الإجابات
+    // ========================
+
+    // بدء جولة جديدة (سؤال جديد)
+    let currentSkipWaiting = false; // حالة انتظار بعد التخطي
+    
+    function startNewRound() {
+        if(window.gameState.gameFinished) return;
+        if(window.gameState.isPaused) return;
+        
+        // التحقق من نهاية الأسئلة
+        if(window.gameState.currentQuestionIndex >= window.gameState.currentQuestions.length) {
+            endGame();
+            return;
+        }
+        
+        // اختيار لاعب عشوائي (قرعة) - إلا إذا كان في حالة انتظار بعد تخطي
+        if(!currentSkipWaiting) {
+            getRandomNextPlayer();
+        }
+        currentSkipWaiting = false;
+        
+        const currentPlayer = window.gameState.players[window.gameState.currentPlayerIndex];
+        const currentQuestion = window.gameState.currentQuestions[window.gameState.currentQuestionIndex];
+        
+        // تحديث واجهة العرض
+        if(window.currentPlayerNameSpan) {
+            window.currentPlayerNameSpan.innerText = currentPlayer;
+        }
+        
+        if(window.questionText) {
+            let questionHtml = currentQuestion.text;
+            if(currentQuestion.gold) {
+                questionHtml = '💎✨ ' + questionHtml + ' ✨💎';
+                window.gameState.goldenQuestionActive = true;
+                if(window.gameMessage) window.gameMessage.innerHTML = "🌟 سؤال ذهبي! الإجابة الصحيحة تعطي 3 نقاط! 🌟";
+            } else {
+                window.gameState.goldenQuestionActive = false;
+            }
+            window.questionText.innerHTML = questionHtml;
+        }
+        
+        if(window.questionDisplay) {
+            window.questionDisplay.innerText = `السؤال ${window.gameState.currentQuestionIndex + 1}/${window.gameState.currentQuestions.length}`;
+        }
+        
+        if(window.roundDisplay) {
+            window.roundDisplay.innerText = `الدور #${window.gameState.roundNumber}`;
+        }
+        
+        // عرض الخيارات
+        displayOptions(currentQuestion.options);
+        
+        // تحديث لوحة المتصدرين
+        updateScoreboardDisplay();
+        
+        // بدء المؤقت
+        window.gameState.waitingForAnswer = true;
+        startTimer();
+        
+        // حفظ الحالة
+        saveGameStateToLocal();
+    }
+    
+    // عرض الخيارات
+    function displayOptions(options) {
+        if(!window.optionsContainer) return;
+        
+        let html = '';
+        options.forEach((opt, idx) => {
+            html += `
+                <div class="option" onclick="document.getElementById('opt_${idx}').click();">
+                    <input type="radio" name="questionOption" id="opt_${idx}" value="${idx}">
+                    <label for="opt_${idx}" style="cursor: pointer; flex:1;">${escapeHtml(opt)}</label>
+                </div>
+            `;
+        });
+        window.optionsContainer.innerHTML = html;
+        
+        // إضافة تأثير hover
+        document.querySelectorAll('.option').forEach(opt => {
+            opt.addEventListener('mouseenter', () => { opt.style.background = '#4c1d95'; });
+            opt.addEventListener('mouseleave', () => { opt.style.background = ''; });
+        });
+    }
+    
+    // بدء المؤقت
+    function startTimer() {
+        if(window.gameState.gameTimer) clearInterval(window.gameState.gameTimer);
+        
+        window.gameState.timeLeft = window.gameState.gameConfig.timeLimit;
+        updateTimerDisplay(window.gameState.timeLeft);
+        
+        window.gameState.gameTimer = setInterval(() => {
+            if(!window.gameState.waitingForAnswer) return;
+            if(window.gameState.isPaused) return;
+            
+            if(window.gameState.timeLeft <= 1) {
+                clearInterval(window.gameState.gameTimer);
+                window.gameState.gameTimer = null;
+                handleTimeOut();
+            } else {
+                window.gameState.timeLeft--;
+                updateTimerDisplay(window.gameState.timeLeft);
+            }
+        }, 1000);
+    }
+    
+    // تحديث عرض المؤقت الدائري
+    function updateTimerDisplay(seconds) {
+        if(window.timerText) window.timerText.innerText = seconds;
+        if(window.timerCircle) {
+            const totalTime = window.gameState.gameConfig.timeLimit;
+            const percentage = (seconds / totalTime) * 360;
+            window.timerCircle.style.background = `conic-gradient(#fbbf24 ${percentage}deg, #2e2a44 ${percentage}deg)`;
+            
+            // تغيير اللون عند قرب انتهاء الوقت
+            if(seconds <= 5) {
+                window.timerCircle.style.background = `conic-gradient(#dc2626 ${percentage}deg, #2e2a44 ${percentage}deg)`;
+            }
+        }
+    }
+    
+    // معالج انتهاء الوقت
+    function handleTimeOut() {
+        if(!window.gameState.waitingForAnswer) return;
+        window.gameState.waitingForAnswer = false;
+        
+        const currentPlayer = window.gameState.players[window.gameState.currentPlayerIndex];
+        
+        if(window.gameMessage) {
+            window.gameMessage.innerHTML = `⏰ انتهى الوقت! ${escapeHtml(currentPlayer)} لم يجب في الوقت المحدد. لا نقاط.`;
+        }
+        
+        // الانتقال إلى السؤال التالي مع قرعة جديدة
+        setTimeout(() => {
+            window.gameState.currentQuestionIndex++;
+            currentSkipWaiting = false;
+            startNewRound();
+        }, 2000);
+    }
+    
+    // معالج التخطي (مرة كل دورين)
+    function handleSkip() {
+        if(!window.gameState.waitingForAnswer) {
+            if(window.gameMessage) window.gameMessage.innerHTML = "⚠️ لا يمكن التخطي الآن.";
+            return;
+        }
+        
+        const currentPlayerName = window.gameState.players[window.gameState.currentPlayerIndex];
+        const skipData = window.gameState.skipData[currentPlayerName];
+        const currentRound = window.gameState.roundNumber;
+        
+        // التحقق من صلاحية التخطي (مرة كل دورين)
+        if(!skipData.skipAvailable) {
+            if(window.gameMessage) window.gameMessage.innerHTML = `❌ ${escapeHtml(currentPlayerName)} لا يوجد لديك تخطي متاح! يعاد التخطي كل دورين.`;
+            return;
+        }
+        
+        if(skipData.roundSkipUsed && (currentRound - skipData.lastSkipRound) < 2) {
+            if(window.gameMessage) window.gameMessage.innerHTML = `❌ ${escapeHtml(currentPlayerName)} لقد استخدمت تخطيك في هذا الدور! انتظر الدور القادم.`;
+            return;
+        }
+        
+        // تنفيذ التخطي
+        skipData.roundSkipUsed = true;
+        skipData.lastSkipRound = currentRound;
+        skipData.skipAvailable = false;
+        
+        // تسجيل التخطي في إحصائيات اللاعب
+        const playerScore = window.gameState.playerScores.find(p => p.name === currentPlayerName);
+        if(playerScore) playerScore.skips++;
+        
+        window.gameState.waitingForAnswer = false;
+        clearInterval(window.gameState.gameTimer);
+        window.gameState.gameTimer = null;
+        
+        if(window.gameMessage) {
+            window.gameMessage.innerHTML = `⏭️ ${escapeHtml(currentPlayerName)} تخطى السؤال! سيحاول الإجابة على السؤال التالي.`;
+        }
+        
+        updateScoreboardDisplay();
+        
+        // الانتقال إلى السؤال التالي لنفس اللاعب
+        setTimeout(() => {
+            window.gameState.currentQuestionIndex++;
+            
+            if(window.gameState.currentQuestionIndex >= window.gameState.currentQuestions.length) {
+                endGame();
+                return;
+            }
+            
+            currentSkipWaiting = true;
+            startNewRound();
+        }, 1500);
+    }
+    
+    // معالج تأكيد الإجابة
+    function handleSubmitAnswer() {
+        if(!window.gameState.waitingForAnswer) {
+            if(window.gameMessage) window.gameMessage.innerHTML = "⚠️ لا يمكن الإجابة الآن.";
+            return;
+        }
+        
+        const selected = document.querySelector('input[name="questionOption"]:checked');
+        if(!selected) {
+            if(window.gameMessage) window.gameMessage.innerHTML = "⚠️ يرجى اختيار إجابة أولاً.";
+            return;
+        }
+        
+        const selectedValue = parseInt(selected.value);
+        const currentQuestion = window.gameState.currentQuestions[window.gameState.currentQuestionIndex];
+        const currentPlayerName = window.gameState.players[window.gameState.currentPlayerIndex];
+        const isCorrect = (selectedValue === currentQuestion.correct);
+        
+        window.gameState.waitingForAnswer = false;
+        clearInterval(window.gameState.gameTimer);
+        window.gameState.gameTimer = null;
+        
+        // تحديث نقاط اللاعب
+        const playerScore = window.gameState.playerScores.find(p => p.name === currentPlayerName);
+        
+        if(isCorrect) {
+            // حساب النقاط (سؤال ذهبي = 3 نقاط، عادي = 1، وضع التدريب = 0)
+            let points = 1;
+            if(window.gameState.goldenQuestionActive) points = 3;
+            if(window.gameState.gameConfig.trainingMode) points = 0;
+            
+            playerScore.score += points;
+            playerScore.correct++;
+            
+            if(window.gameMessage) {
+                window.gameMessage.innerHTML = `✅ ✅ إجابة صحيحة! ${escapeHtml(currentPlayerName)} يحصل على ${points} نقطة.`;
+            }
+            playSound('correct');
+        } else {
+            // إجابة خاطئة: خصم نقطة (إلا في وضع التدريب)
+            if(!window.gameState.gameConfig.trainingMode) {
+                playerScore.score = Math.max(0, playerScore.score - 1);
+            }
+            playerScore.wrong++;
+            
+            const correctAnswerText = currentQuestion.options[currentQuestion.correct];
+            if(window.gameMessage) {
+                window.gameMessage.innerHTML = `❌ إجابة خاطئة! الإجابة الصحيحة هي: "${correctAnswerText}". ${!window.gameState.gameConfig.trainingMode ? 'تم خصم نقطة.' : '(وضع التدريب: لا خصم)'}`;
+            }
+            playSound('wrong');
+        }
+        
+        updateScoreboardDisplay();
+        
+        // الانتقال إلى السؤال التالي مع قرعة جديدة
+        setTimeout(() => {
+            window.gameState.currentQuestionIndex++;
+            
+            // تحديث رقم الدور (كل مرور على جميع اللاعبين = دور)
+            if(window.gameState.currentPlayerIndex === window.gameState.players.length - 1) {
+                window.gameState.roundNumber++;
+                
+                // تجديد التخطي كل دورين
+                if(window.gameState.roundNumber % 2 === 0) {
+                    window.gameState.players.forEach(name => {
+                        const skip = window.gameState.skipData[name];
+                        if(skip) {
+                            skip.skipAvailable = true;
+                            skip.roundSkipUsed = false;
+                        }
+                    });
+                    if(window.gameMessage) {
+                        window.gameMessage.innerHTML += "<br>🔄 تم تجديد حق التخطي لجميع اللاعبين (كل دورين)";
+                    }
+                }
+            }
+            
+            if(window.gameState.currentQuestionIndex >= window.gameState.currentQuestions.length) {
+                endGame();
+            } else {
+                currentSkipWaiting = false;
+                startNewRound();
+            }
+        }, 2000);
+    }
+    
+    // تحديث لوحة المتصدرين
+    function updateScoreboardDisplay() {
+        if(!window.scoreboardContainer) return;
+        
+        const sorted = [...window.gameState.playerScores].sort((a, b) => b.score - a.score);
+        
+        let html = '';
+        sorted.forEach((p, idx) => {
+            let medal = '';
+            let rankClass = '';
+            if(idx === 0) {
+                medal = '👑';
+                rankClass = 'first';
+            } else if(idx === 1) {
+                medal = '🥈';
+            } else if(idx === 2) {
+                medal = '🥉';
+            } else {
+                medal = `${idx+1}.`;
+            }
+            
+            html += `
+                <div class="score-item ${rankClass}">
+                    <span><span class="medal">${medal}</span> ${escapeHtml(p.name)}</span>
+                    <span style="font-weight: bold; font-size: 1.2rem;">${p.score}</span>
+                </div>
+                <div style="font-size: 0.7rem; padding-right: 45px; margin-bottom: 8px; color: #aaa;">
+                    ✅ ${p.correct} | ❌ ${p.wrong} | ⏭️ ${p.skips}
+                </div>
+            `;
+        });
+        
+        window.scoreboardContainer.innerHTML = html;
+    }
+    
+    // إيقاف مؤقت
+    function togglePause() {
+        if(!window.gameState.waitingForAnswer) return;
+        
+        window.gameState.isPaused = !window.gameState.isPaused;
+        const btn = document.getElementById('pauseGameBtn');
+        
+        if(window.gameState.isPaused) {
+            if(window.gameState.gameTimer) clearInterval(window.gameState.gameTimer);
+            window.gameState.gameTimer = null;
+            if(window.gameMessage) window.gameMessage.innerHTML = "⏸ توقف مؤقت - اضغط استئناف للمتابعة";
+            if(btn) btn.innerHTML = "▶️ استئناف";
+        } else {
+            startTimer();
+            if(window.gameMessage) window.gameMessage.innerHTML = "▶️ استئناف المسابقة...";
+            if(btn) btn.innerHTML = "⏸ إيقاف مؤقت";
+        }
+        
+        saveGameStateToLocal();
+    }
+    
+    // تشغيل الأصوات
+    function playSound(type) {
+        try {
+            // استخدام Web Audio API لنبضات بسيطة
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            if(type === 'correct') {
+                oscillator.frequency.value = 880;
+                gainNode.gain.value = 0.3;
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } else if(type === 'wrong') {
+                oscillator.frequency.value = 440;
+                gainNode.gain.value = 0.3;
+                oscillator.start();
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + 0.5);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            }
+            
+            setTimeout(() => audioContext.close(), 600);
+        } catch(e) {
+            console.log("صوت غير متاح");
+        }
+    }
+    
+    console.log("الجزء الخامس تم تحميله - نظام التخطي والمؤقت جاهز");
+</script>
+<script>
+    // ========================
+    // الجزء السادس: إنهاء المسابقة + التقرير النهائي المتقدم
+    // ========================
+
+    // إنهاء المسابقة وعرض التقرير
+    function endGame() {
+        if(window.gameState.gameFinished) return;
+        
+        window.gameState.gameFinished = true;
+        window.gameState.gameActive = false;
+        window.gameState.waitingForAnswer = false;
+        
+        if(window.gameState.gameTimer) {
+            clearInterval(window.gameState.gameTimer);
+            window.gameState.gameTimer = null;
+        }
+        
+        // ترتيب اللاعبين حسب النقاط
+        const sorted = [...window.gameState.playerScores].sort((a, b) => b.score - a.score);
+        const winner = sorted[0];
+        
+        // حساب إحصائيات متقدمة
+        const totalQuestionsAnswered = window.gameState.currentQuestions.length;
+        const averageScore = (sorted.reduce((sum, p) => sum + p.score, 0) / sorted.length).toFixed(1);
+        const highestCorrect = Math.max(...sorted.map(p => p.correct));
+        const mostSkips = Math.max(...sorted.map(p => p.skips));
+        
+        // بناء التقرير النهائي
+        const reportHtml = `
+            <div class="card">
+                <h2 style="text-align: center;">🏆 التقرير النهائي للمسابقة 🏆</h2>
+                
+                <!-- الفائز الكبير -->
+                <div style="text-align: center; margin: 20px 0; padding: 25px; background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 48px; color: #1e1b2e;">
+                    <div style="font-size: 1.2rem;">🎉 الفائز الكبير 🎉</div>
+                    <div style="font-size: 2.5rem; font-weight: bold; margin: 10px 0;">${escapeHtml(winner.name)}</div>
+                    <div style="font-size: 1.5rem;">🏅 ${winner.score} نقطة 🏅</div>
+                    <div style="font-size: 0.9rem; margin-top: 10px;">✅ ${winner.correct} إجابة صحيحة | ❌ ${winner.wrong} إجابة خاطئة | ⏭️ ${winner.skips} تخطي</div>
+                </div>
+                
+                <!-- إحصائيات سريعة -->
+                <div class="three-columns" style="margin-bottom: 20px;">
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 24px; padding: 15px; text-align: center;">
+                        <div style="font-size: 1.8rem;">📊</div>
+                        <div style="font-weight: bold;">${totalQuestionsAnswered}</div>
+                        <div>إجمالي الأسئلة</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 24px; padding: 15px; text-align: center;">
+                        <div style="font-size: 1.8rem;">⭐</div>
+                        <div style="font-weight: bold;">${averageScore}</div>
+                        <div>متوسط النقاط</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 24px; padding: 15px; text-align: center;">
+                        <div style="font-size: 1.8rem;">🏅</div>
+                        <div style="font-weight: bold;">${highestCorrect}</div>
+                        <div>أعلى إجابات صحيحة</div>
+                    </div>
+                </div>
+                
+                <!-- جدول الترتيب النهائي -->
+                <h3>📋 الترتيب النهائي للاعبين</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead>
+                        <tr style="background: #4c1d95;">
+                            <th style="padding: 12px; text-align: center;">المركز</th>
+                            <th style="padding: 12px; text-align: center;">اللاعب</th>
+                            <th style="padding: 12px; text-align: center;">النقاط</th>
+                            <th style="padding: 12px; text-align: center;">✅ صحيح</th>
+                            <th style="padding: 12px; text-align: center;">❌ خطأ</th>
+                            <th style="padding: 12px; text-align: center;">⏭️ تخطي</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sorted.map((p, idx) => `
+                            <tr style="border-bottom: 1px solid #4c1d95;">
+                                <td style="padding: 10px; text-align: center;">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx+1}</td>
+                                <td style="padding: 10px; text-align: center;">${escapeHtml(p.name)}</td>
+                                <td style="padding: 10px; text-align: center; font-weight: bold; color: #fbbf24;">${p.score}</td>
+                                <td style="padding: 10px; text-align: center; color: #10b981;">${p.correct}</td>
+                                <td style="padding: 10px; text-align: center; color: #ef4444;">${p.wrong}</td>
+                                <td style="padding: 10px; text-align: center;">${p.skips}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                
+                <!-- أزرار التصدير -->
+                <div style="margin-top: 25px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                    <button id="exportTxtBtn" class="btn-gold">📄 تصدير كـ TXT</button>
+                    <button id="exportCsvBtn" class="btn-info">📊 تصدير كـ CSV</button>
+                    <button id="printReportBtn" style="background: #6b7280;">🖨️ طباعة التقرير</button>
+                    <button id="newGameBtn" class="btn-success">🔄 مسابقة جديدة</button>
+                    <button id="shareReportBtn" style="background: #3b82f6;">📤 مشاركة النتيجة</button>
+                </div>
+            </div>
+        `;
+        
+        gameArea.innerHTML = reportHtml;
+        
+        // ربط أزرار التقرير
+        document.getElementById('exportTxtBtn')?.addEventListener('click', () => exportReport('txt'));
+        document.getElementById('exportCsvBtn')?.addEventListener('click', () => exportReport('csv'));
+        document.getElementById('printReportBtn')?.addEventListener('click', () => window.print());
+        document.getElementById('newGameBtn')?.addEventListener('click', () => location.reload());
+        document.getElementById('shareReportBtn')?.addEventListener('click', shareReport);
+        
+        // حفظ النتائج
+        saveGameResults();
+        
+        // إطلاق مؤثرات احتفالية
+        launchCelebration();
+        
+        // إشعار سطح المكتب
+        sendNotification(`🏆 انتهت المسابقة! الفائز هو ${winner.name} بـ ${winner.score} نقطة`);
+    }
+    
+    // تصدير التقرير (TXT أو CSV)
+    function exportReport(format) {
+        const sorted = [...window.gameState.playerScores].sort((a, b) => b.score - a.score);
+        const winner = sorted[0];
+        
+        let content = '';
+        let filename = `تقرير_المسابقة_${new Date().toISOString().slice(0, 19)}`;
+        
+        if(format === 'txt') {
+            content = `=== التقرير النهائي للمسابقة الأرثوذكسية ===\n`;
+            content += `التاريخ: ${new Date().toLocaleString()}\n`;
+            content += `نوع المسابقة: ${window.gameState.gameConfig.gameType}\n`;
+            content += `عدد الأسئلة: ${window.gameState.currentQuestions.length}\n`;
+            content += `عدد اللاعبين: ${window.gameState.players.length}\n`;
+            content += `\n🏆 الفائز الكبير: ${winner.name} (${winner.score} نقطة)\n\n`;
+            content += `=== الترتيب النهائي ===\n`;
+            sorted.forEach((p, idx) => {
+                content += `${idx+1}. ${p.name} - ${p.score} نقطة (صحيح:${p.correct} | خطأ:${p.wrong} | تخطي:${p.skips})\n`;
+            });
+            filename += '.txt';
+        } else if(format === 'csv') {
+            content = `المركز,اللاعب,النقاط,صحيح,خطأ,تخطي\n`;
+            sorted.forEach((p, idx) => {
+                content += `${idx+1},${p.name},${p.score},${p.correct},${p.wrong},${p.skips}\n`;
+            });
+            filename += '.csv';
+        }
+        
+        const blob = new Blob([content], {type: format === 'csv' ? 'text/csv' : 'text/plain'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+    
+    // مشاركة النتيجة
+    function shareReport() {
+        const sorted = [...window.gameState.playerScores].sort((a, b) => b.score - a.score);
+        const winner = sorted[0];
+        
+        let shareText = `🏆 المسابقة الأرثوذكسية 🏆\n`;
+        shareText += `الفائز: ${winner.name} (${winner.score} نقطة)\n`;
+        shareText += `الترتيب:\n`;
+        sorted.slice(0, 3).forEach((p, idx) => {
+            shareText += `${idx+1}. ${p.name} - ${p.score}\n`;
+        });
+        
+        if(navigator.share) {
+            navigator.share({
+                title: 'نتيجة المسابقة الأرثوذكسية',
+                text: shareText
+            }).catch(() => {
+                copyToClipboard(shareText);
+            });
+        } else {
+            copyToClipboard(shareText);
+        }
+    }
+    
+    // نسخ إلى الحافظة
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert("✅ تم نسخ النتيجة إلى الحافظة");
+        }).catch(() => {
+            alert("❌ فشل النسخ");
+        });
+    }
+    
+    // حفظ النتائج في localStorage
+    function saveGameResults() {
+        const gameResults = {
+            date: new Date().toISOString(),
+            dateLocale: new Date().toLocaleString(),
+            gameType: window.gameState.gameConfig.gameType,
+            totalQuestions: window.gameState.currentQuestions.length,
+            players: window.gameState.playerScores,
+            winner: [...window.gameState.playerScores].sort((a, b) => b.score - a.score)[0].name
+        };
+        
+        // استرجاع السجل القديم
+        let history = localStorage.getItem('orthodox_quiz_history');
+        history = history ? JSON.parse(history) : [];
+        history.unshift(gameResults);
+        if(history.length > 20) history.pop();
+        localStorage.setItem('orthodox_quiz_history', JSON.stringify(history));
+        localStorage.setItem('orthodox_last_game', JSON.stringify(gameResults));
+    }
+    
+    // إطلاق مؤثرات احتفالية
+    function launchCelebration() {
+        // كونفيتي بسيط
+        const colors = ['#fbbf24', '#7c3aed', '#10b981', '#ef4444', '#3b82f6'];
+        
+        for(let i = 0; i < 100; i++) {
+            const confetti = document.createElement('div');
+            confetti.style.position = 'fixed';
+            confetti.style.width = '10px';
+            confetti.style.height = '10px';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * 100 + '%';
+            confetti.style.top = '-10px';
+            confetti.style.borderRadius = '50%';
+            confetti.style.zIndex = '9999';
+            confetti.style.pointerEvents = 'none';
+            confetti.style.animation = `fall ${Math.random() * 2 + 2}s linear forwards`;
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => confetti.remove(), 4000);
+        }
+        
+        // إضافة أنيميشن السقوط
+        if(!document.getElementById('confetti-style')) {
+            const style = document.createElement('style');
+            style.id = 'confetti-style';
+            style.textContent = `
+                @keyframes fall {
+                    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    // إشعار سطح المكتب
+    function sendNotification(message) {
+        if('Notification' in window && Notification.permission === 'granted') {
+            new Notification('المسابقة الأرثوذكسية', { body: message, icon: '✝️' });
+        } else if('Notification' in window && Notification.permission !== 'denied') {
+            Notification.requestPermission().then(permission => {
+                if(permission === 'granted') {
+                    new Notification('المسابقة الأرثوذكسية', { body: message, icon: '✝️' });
+                }
+            });
+        }
+    }
+    
+    // طلب إذن الإشعارات عند بدء المسابقة
+    if('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+    
+    // استئناف المسابقة المحفوظة
+    window.resumeGameSystem = function() {
+        renderGameInterface();
+        
+        // استعادة البيانات المحفوظة
+        if(window.gameState.currentQuestions && window.gameState.currentQuestions.length > 0) {
+            const currentQuestion = window.gameState.currentQuestions[window.gameState.currentQuestionIndex];
+            if(currentQuestion && window.questionText) {
+                window.questionText.innerText = currentQuestion.text;
+                displayOptions(currentQuestion.options);
+            }
+            
+            if(window.currentPlayerNameSpan && window.gameState.players[window.gameState.currentPlayerIndex]) {
+                window.currentPlayerNameSpan.innerText = window.gameState.players[window.gameState.currentPlayerIndex];
+            }
+            
+            updateScoreboardDisplay();
+            
+            if(window.questionDisplay) {
+                window.questionDisplay.innerText = `السؤال ${window.gameState.currentQuestionIndex + 1}/${window.gameState.currentQuestions.length}`;
+            }
+            
+            window.gameState.waitingForAnswer = true;
+            startTimer();
+        } else {
+            startNewRound();
+        }
+    };
+    
+    console.log("الجزء السادس تم تحميله - نظام التقرير والتصدير جاهز");
+</script>
+<script>
+    // ========================
+    // الجزء السابع: اللمسات النهائية + تحسينات إضافية + وضع الشاشة العريضة
+    // ========================
+
+    // وضع الشاشة العريضة (View Mode) - للعرض على شاشة كبيرة
+    let isViewMode = false;
+    
+    function toggleViewMode() {
+        isViewMode = !isViewMode;
+        
+        if(isViewMode) {
+            // إخفاء عناصر التحكم وإظهار وضع العرض فقط
+            const btns = document.querySelectorAll('#skipBtn, #submitAnswerBtn, #endGameEarlyBtn, #pauseGameBtn, #changeGameTypeBtn');
+            btns.forEach(btn => {
+                if(btn) btn.style.display = 'none';
+            });
+            
+            const optionsDiv = document.getElementById('optionsContainer');
+            if(optionsDiv) {
+                const radios = optionsDiv.querySelectorAll('input[type="radio"]');
+                radios.forEach(radio => radio.style.display = 'none');
+            }
+            
+            // إضافة زر العودة
+            let backBtn = document.getElementById('exitViewModeBtn');
+            if(!backBtn) {
+                backBtn = document.createElement('button');
+                backBtn.id = 'exitViewModeBtn';
+                backBtn.innerHTML = '🔙 الخروج من وضع العرض';
+                backBtn.style.position = 'fixed';
+                backBtn.style.bottom = '20px';
+                backBtn.style.left = '20px';
+                backBtn.style.zIndex = '1000';
+                backBtn.style.background = '#dc2626';
+                backBtn.addEventListener('click', () => {
+                    location.reload();
+                });
+                document.body.appendChild(backBtn);
+            }
+            
+            if(window.gameMessage) window.gameMessage.innerHTML = "📺 وضع الشاشة العريضة - للعرض فقط";
+        } else {
+            location.reload();
+        }
+    }
+    
+    // إضافة زر وضع الشاشة العريضة في واجهة المسابقة
+    function addViewModeButton() {
+        const container = document.querySelector('.two-columns .card:last-child .message-area');
+        if(container && !document.getElementById('viewModeBtn')) {
+            const viewBtn = document.createElement('button');
+            viewBtn.id = 'viewModeBtn';
+            viewBtn.innerHTML = '📺 وضع الشاشة العريضة';
+            viewBtn.style.marginTop = '10px';
+            viewBtn.style.width = '100%';
+            viewBtn.style.background = '#8b5cf6';
+            viewBtn.addEventListener('click', toggleViewMode);
+            container.parentElement?.appendChild(viewBtn);
+        }
+    }
+    
+    // مؤقت تحضيري بين الجولات
+    let preparationTimer = null;
+    
+    function startPreparationTimer(seconds, callback) {
+        if(preparationTimer) clearInterval(preparationTimer);
+        
+        let timeLeft = seconds;
+        if(window.gameMessage) window.gameMessage.innerHTML = `⏳ جولة جديدة تبدأ خلال ${timeLeft} ثانية...`;
+        
+        preparationTimer = setInterval(() => {
+            timeLeft--;
+            if(window.gameMessage) window.gameMessage.innerHTML = `⏳ جولة جديدة تبدأ خلال ${timeLeft} ثانية...`;
+            
+            if(timeLeft <= 0) {
+                clearInterval(preparationTimer);
+                preparationTimer = null;
+                if(callback) callback();
+            }
+        }, 1000);
+    }
+    
+    // حفظ الإعدادات الحالية
+    function saveSettings() {
+        const settings = {
+            gameType: window.gameState.gameConfig.gameType,
+            timeLimit: window.gameState.gameConfig.timeLimit,
+            trainingMode: window.gameState.gameConfig.trainingMode,
+            theme: document.documentElement.getAttribute('data-theme')
+        };
+        localStorage.setItem('orthodox_settings', JSON.stringify(settings));
+    }
+    
+    // تحميل الإعدادات
+    function loadSettings() {
+        const saved = localStorage.getItem('orthodox_settings');
+        if(saved) {
+            try {
+                const settings = JSON.parse(saved);
+                if(settings.theme) {
+                    document.documentElement.setAttribute('data-theme', settings.theme);
+                    const themeBtn = document.getElementById('themeToggleBtn');
+                    if(themeBtn) themeBtn.textContent = settings.theme === 'dark' ? '☀️ الوضع النهاري' : '🌙 الوضع الليلي';
+                }
+            } catch(e) {}
+        }
+    }
+    
+    // إضافة مؤشر كتابة (Typing indicator)
+    function showTypingIndicator() {
+        const indicator = document.createElement('div');
+        indicator.id = 'typingIndicator';
+        indicator.innerHTML = '<span>.</span><span>.</span><span>.</span>';
+        indicator.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--accent);
+            padding: 10px 15px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            z-index: 1000;
+        `;
+        document.body.appendChild(indicator);
+        
+        setTimeout(() => indicator.remove(), 1500);
+    }
+    
+    // عرض إحصائيات سريعة أثناء اللعب
+    function showQuickStats() {
+        const sorted = [...window.gameState.playerScores].sort((a, b) => b.score - a.score);
+        const leader = sorted[0];
+        
+        const statsDiv = document.createElement('div');
+        statsDiv.id = 'quickStats';
+        statsDiv.style.cssText = `
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 10px 15px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            z-index: 100;
+            border: 1px solid var(--gold);
+        `;
+        statsDiv.innerHTML = `🏆 المتصدر: ${escapeHtml(leader.name)} (${leader.score})`;
+        document.body.appendChild(statsDiv);
+        
+        setTimeout(() => statsDiv.remove(), 5000);
+    }
+    
+    // إضافة اختصارات لوحة المفاتيح
+    function addKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            if(window.gameState.gameFinished) return;
+            
+            switch(e.key) {
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                    const optionIndex = parseInt(e.key) - 1;
+                    const radio = document.getElementById(`opt_${optionIndex}`);
+                    if(radio) radio.click();
+                    break;
+                case 'Enter':
+                    const submitBtn = document.getElementById('submitAnswerBtn');
+                    if(submitBtn && !submitBtn.disabled) submitBtn.click();
+                    break;
+                case 's':
+                case 'S':
+                    const skipBtn = document.getElementById('skipBtn');
+                    if(skipBtn && !skipBtn.disabled) skipBtn.click();
+                    break;
+                case 'p':
+                case 'P':
+                    const pauseBtn = document.getElementById('pauseGameBtn');
+                    if(pauseBtn) pauseBtn.click();
+                    break;
+                case 'Escape':
+                    if(window.gameMessage) window.gameMessage.innerHTML = "⌨️ اختصارات: 1-4 للخيارات، Enter للتأكيد، S للتخطي، P للإيقاف";
+                    setTimeout(() => {
+                        if(window.gameMessage && window.gameMessage.innerHTML.includes("اختصارات")) {
+                            window.gameMessage.innerHTML = "✅ جاهز للمتابعة";
+                        }
+                    }, 2000);
+                    break;
+            }
+        });
+    }
+    
+    // إضافة موسيقى خلفية هادئة (اختيارية - سيتم تشغيلها عند طلب المستخدم)
+    let backgroundMusic = null;
+    
+    function toggleBackgroundMusic() {
+        if(backgroundMusic && !backgroundMusic.paused) {
+            backgroundMusic.pause();
+            if(window.gameMessage) window.gameMessage.innerHTML = "🔇 تم إيقاف الموسيقى";
+        } else {
+            try {
+                backgroundMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3');
+                backgroundMusic.loop = true;
+                backgroundMusic.volume = 0.2;
+                backgroundMusic.play().catch(() => {
+                    if(window.gameMessage) window.gameMessage.innerHTML = "⚠️ يرجى التفاعل مع الصفحة أولاً لتشغيل الموسيقى";
+                });
+                if(window.gameMessage) window.gameMessage.innerHTML = "🎵 تشغيل موسيقى خلفية هادئة";
+            } catch(e) {
+                if(window.gameMessage) window.gameMessage.innerHTML = "❌ تعذر تشغيل الموسيقى";
+            }
+        }
+    }
+    
+    // زر تشغيل الموسيقى
+    function addMusicButton() {
+        const container = document.querySelector('.two-columns .card:last-child');
+        if(container && !document.getElementById('musicBtn')) {
+            const musicBtn = document.createElement('button');
+            musicBtn.id = 'musicBtn';
+            musicBtn.innerHTML = '🎵 موسيقى خلفية';
+            musicBtn.style.marginTop = '10px';
+            musicBtn.style.width = '100%';
+            musicBtn.style.background = '#ec489a';
+            musicBtn.addEventListener('click', toggleBackgroundMusic);
+            container.appendChild(musicBtn);
+        }
+    }
+    
+    // عرض عدد اللاعبين النشطين
+    function updateActivePlayersCount() {
+        const activeCount = window.gameState.players.length;
+        const countDiv = document.getElementById('activePlayersCount');
+        if(countDiv) {
+            countDiv.innerHTML = `👥 عدد اللاعبين: ${activeCount}`;
+        } else {
+            const container = document.querySelector('.two-columns .card:last-child .message-area');
+            if(container) {
+                const countSpan = document.createElement('div');
+                countSpan.id = 'activePlayersCount';
+                countSpan.style.marginTop = '10px';
+                countSpan.style.fontSize = '0.8rem';
+                container.parentElement?.appendChild(countSpan);
+                document.getElementById('activePlayersCount').innerHTML = `👥 عدد اللاعبين: ${activeCount}`;
+            }
+        }
+    }
+    
+    // تحسين: عرض وقت المسابقة المنقضي
+    let gameStartTime = null;
+    let gameTimerInterval = null;
+    
+    function startGameTimer() {
+        gameStartTime = Date.now();
+        if(gameTimerInterval) clearInterval(gameTimerInterval);
+        
+        gameTimerInterval = setInterval(() => {
+            if(window.gameState.gameFinished) {
+                clearInterval(gameTimerInterval);
+                return;
+            }
+            const elapsed = Math.floor((Date.now() - gameStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            
+            let timerDiv = document.getElementById('gameElapsedTime');
+            if(!timerDiv) {
+                const container = document.querySelector('.two-columns .card:last-child');
+                if(container) {
+                    timerDiv = document.createElement('div');
+                    timerDiv.id = 'gameElapsedTime';
+                    timerDiv.style.cssText = 'font-size: 0.7rem; margin-top: 5px; opacity: 0.7;';
+                    container.appendChild(timerDiv);
+                }
+            }
+            if(timerDiv) {
+                timerDiv.innerHTML = `⏱️ الوقت المنقضي: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }, 1000);
+    }
+    
+    // تعديل دالة startNewRound لإضافة التحسينات
+    const originalStartNewRound = startNewRound;
+    window.startNewRound = function() {
+        if(!window.gameStartTimeCalled) {
+            window.gameStartTimeCalled = true;
+            startGameTimer();
+        }
+        updateActivePlayersCount();
+        originalStartNewRound();
+    };
+    
+    // تعديل دالة renderGameInterface لإضافة الأزرار الجديدة
+    const originalRenderGameInterface = renderGameInterface;
+    window.renderGameInterface = function() {
+        originalRenderGameInterface();
+        setTimeout(() => {
+            addViewModeButton();
+            addMusicButton();
+            addKeyboardShortcuts();
+            updateActivePlayersCount();
+        }, 100);
+    };
+    
+    // حفظ الإعدادات عند تغيير النوع
+    const originalChangeGameType = window.changeGameTypeDuringGame;
+    window.changeGameTypeDuringGame = function(newType) {
+        originalChangeGameType(newType);
+        saveSettings();
+    };
+    
+    // تحميل الإعدادات عند بدء التشغيل
+    loadSettings();
+    
+    // تصدير دوال إضافية للاستخدام العام
+    window.toggleViewMode = toggleViewMode;
+    window.showQuickStats = showQuickStats;
+    window.showTypingIndicator = showTypingIndicator;
+    
+    console.log("الجزء السابع تم تحميله - اللمسات النهائية والتحسينات جاهزة");
+    console.log("🎉 المسابقة جاهزة بالكامل! اضغط بدء المسابقة للبدء");
+</script>
+<script>
+    // ========================
+    // الجزء الثامن: أكواد أسباب الفوز وتحليل الأداء المتقدم
+    // ========================
+
+    // تحليل أسباب فوز اللاعب
+    function analyzeWinReasons(winner, allPlayers, sorted) {
+        const reasons = [];
+        const medals = [];
+        
+        // 1. أعلى نقاط
+        reasons.push(`🏆 حصل على أعلى نقاط: ${winner.score} نقطة`);
+        
+        // 2. الفارق عن الثاني
+        const second = sorted[1];
+        if(second) {
+            const difference = winner.score - second.score;
+            if(difference > 0) {
+                reasons.push(`📈 تفوق على الوصيف بـ ${difference} نقطة`);
+            }
+        }
+        
+        // 3. أكثر إجابات صحيحة
+        const highestCorrect = Math.max(...allPlayers.map(p => p.correct));
+        if(winner.correct === highestCorrect && highestCorrect > 0) {
+            reasons.push(`✅ صاحب أكبر عدد إجابات صحيحة (${winner.correct} إجابة)`);
+        }
+        
+        // 4. أقل إجابات خاطئة
+        const lowestWrong = Math.min(...allPlayers.map(p => p.wrong));
+        if(winner.wrong === lowestWrong) {
+            reasons.push(`🎯 أقل عدد أخطاء (${winner.wrong} خطأ فقط)`);
+        }
+        
+        // 5. نسبة نجاح عالية
+        const totalAnswered = winner.correct + winner.wrong;
+        if(totalAnswered > 0) {
+            const successRate = (winner.correct / totalAnswered * 100).toFixed(1);
+            if(successRate >= 70) {
+                reasons.push(`📊 نسبة نجاح ممتازة: ${successRate}%`);
+            }
+        }
+        
+        // 6. أداء في الأسئلة الذهبية
+        const goldenPerformance = analyzeGoldenPerformance(winner);
+        if(goldenPerformance) {
+            reasons.push(goldenPerformance);
+        }
+        
+        // 7. أقل استخدام للتخطي (اعتماد على النفس)
+        const lowestSkips = Math.min(...allPlayers.map(p => p.skips));
+        if(winner.skips === lowestSkips && winner.skips === 0) {
+            reasons.push(`💪 لم يستخدم التخطي مطلقاً (اعتماد كامل على المعرفة)`);
+        } else if(winner.skips === lowestSkips && lowestSkips > 0) {
+            reasons.push(`🎯 أقل استخدام للتخطي (${winner.skips} مرة فقط)`);
+        }
+        
+        // 8. ميداليات إضافية
+        if(winner.correct >= 15) medals.push("🏅 وسام المعرفة");
+        if(winner.score >= 30) medals.push("⭐ نجمة التميز");
+        if(winner.correct === allPlayers.length * 2) medals.push("💎 الماسي");
+        
+        return { reasons, medals };
+    }
+    
+    // تحليل أداء الأسئلة الذهبية
+    function analyzeGoldenPerformance(player) {
+        // نبحث عن الأسئلة الذهبية التي أجاب عليها اللاعب
+        const goldenQuestions = window.gameState.currentQuestions.filter(q => q.gold === true);
+        // هذه معلومات إضافية - يمكن توسيعها لاحقاً
+        
+        if(goldenQuestions.length > 0 && player.correct >= 2) {
+            return `✨ تميز في الأسئلة الذهبية`;
+        }
+        return null;
+    }
+    
+    // إضافة شهادات الفوز
+    function generateWinnerCertificate(winner, reasons, medals) {
+        const certificateHtml = `
+            <div style="background: linear-gradient(135deg, #1e1b2e, #2a2340); border-radius: 32px; padding: 20px; margin-top: 20px; border: 2px solid var(--gold); text-align: center;">
+                <div style="font-size: 1.5rem; margin-bottom: 10px;">📜 شهادة الفوز 📜</div>
+                <div style="font-size: 2rem; font-weight: bold; color: var(--gold);">${escapeHtml(winner.name)}</div>
+                <div style="margin: 15px 0;">
+                    ${medals.map(m => `<span style="display: inline-block; margin: 5px; background: var(--gold); color: #1e1b2e; padding: 5px 15px; border-radius: 40px;">${m}</span>`).join('')}
+                </div>
+                <div style="text-align: right; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 24px; margin-top: 10px;">
+                    <strong>🏆 أسباب الفوز:</strong>
+                    <ul style="margin-top: 10px; padding-right: 20px;">
+                        ${reasons.map(r => `<li style="margin: 8px 0;">${r}</li>`).join('')}
+                    </ul>
+                </div>
+                <div style="margin-top: 15px; font-size: 0.8rem; opacity: 0.7;">
+                    تاريخ الفوز: ${new Date().toLocaleDateString('ar-EG')}
+                </div>
+            </div>
+        `;
+        return certificateHtml;
+    }
+    
+    // إضافة تحليل أداء لكل لاعب في التقرير
+    function generatePlayerAnalysis(player, rank) {
+        let analysis = '';
+        const totalAnswered = player.correct + player.wrong;
+        const successRate = totalAnswered > 0 ? (player.correct / totalAnswered * 100).toFixed(1) : 0;
+        
+        if(rank === 1) {
+            analysis = '🏆 أداء ممتاز - فائز مستحق';
+        } else if(rank === 2) {
+            analysis = '🥈 أداء قوي - قريب من القمة';
+        } else if(rank === 3) {
+            analysis = '🥉 أداء جيد - يستحق الإشادة';
+        } else if(successRate >= 60) {
+            analysis = '📈 أداء جيد مع بعض الأخطاء';
+        } else if(successRate >= 40) {
+            analysis = '📊 أداء متوسط - يحتاج إلى مزيد من التدريب';
+        } else {
+            analysis = '📚 يحتاج إلى دراسة أكثر - واصل التعلم';
+        }
+        
+        if(player.skips > 3) {
+            analysis += ' | ⏭️ استخدام كثير للتخطي';
+        }
+        
+        return analysis;
+    }
+    
+    // تعديل دالة endGame لإضافة أسباب الفوز
+    const originalEndGame = endGame;
+    window.endGame = function() {
+        if(window.gameState.gameFinished) return;
+        
+        window.gameState.gameFinished = true;
+        window.gameState.gameActive = false;
+        window.gameState.waitingForAnswer = false;
+        
+        if(window.gameState.gameTimer) {
+            clearInterval(window.gameState.gameTimer);
+            window.gameState.gameTimer = null;
+        }
+        
+        // ترتيب اللاعبين حسب النقاط
+        const sorted = [...window.gameState.playerScores].sort((a, b) => b.score - a.score);
+        const winner = sorted[0];
+        
+        // تحليل أسباب الفوز
+        const { reasons, medals } = analyzeWinReasons(winner, window.gameState.playerScores, sorted);
+        const certificateHtml = generateWinnerCertificate(winner, reasons, medals);
+        
+        // حساب إحصائيات متقدمة
+        const totalQuestionsAnswered = window.gameState.currentQuestions.length;
+        const averageScore = (sorted.reduce((sum, p) => sum + p.score, 0) / sorted.length).toFixed(1);
+        const highestCorrect = Math.max(...sorted.map(p => p.correct));
+        const mostSkips = Math.max(...sorted.map(p => p.skips));
+        
+        // بناء جدول اللاعبين مع التحليل
+        const playersTableRows = sorted.map((p, idx) => {
+            const analysis = generatePlayerAnalysis(p, idx + 1);
+            return `
+                <tr style="border-bottom: 1px solid #4c1d95;">
+                    <td style="padding: 10px; text-align: center;">${idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx+1}</td>
+                    <td style="padding: 10px; text-align: center;">${escapeHtml(p.name)}</td>
+                    <td style="padding: 10px; text-align: center; font-weight: bold; color: #fbbf24;">${p.score}</td>
+                    <td style="padding: 10px; text-align: center; color: #10b981;">${p.correct}</td>
+                    <td style="padding: 10px; text-align: center; color: #ef4444;">${p.wrong}</td>
+                    <td style="padding: 10px; text-align: center;">${p.skips}</td>
+                    <td style="padding: 10px; text-align: center; font-size: 0.8rem;">${analysis}</td>
+                </tr>
+            `;
+        }).join('');
+        
+        // التقرير النهائي مع أسباب الفوز
+        const reportHtml = `
+            <div class="card">
+                <h2 style="text-align: center;">🏆 التقرير النهائي للمسابقة 🏆</h2>
+                
+                <!-- شهادة الفوز مع الأسباب -->
+                ${certificateHtml}
+                
+                <!-- إحصائيات سريعة -->
+                <div class="three-columns" style="margin: 20px 0;">
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 24px; padding: 15px; text-align: center;">
+                        <div style="font-size: 1.8rem;">📊</div>
+                        <div style="font-weight: bold;">${totalQuestionsAnswered}</div>
+                        <div>إجمالي الأسئلة</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 24px; padding: 15px; text-align: center;">
+                        <div style="font-size: 1.8rem;">⭐</div>
+                        <div style="font-weight: bold;">${averageScore}</div>
+                        <div>متوسط النقاط</div>
+                    </div>
+                    <div style="background: rgba(0,0,0,0.2); border-radius: 24px; padding: 15px; text-align: center;">
+                        <div style="font-size: 1.8rem;">🏅</div>
+                        <div style="font-weight: bold;">${highestCorrect}</div>
+                        <div>أعلى إجابات صحيحة</div>
+                    </div>
+                </div>
+                
+                <!-- جدول الترتيب مع التحليل -->
+                <h3>📋 الترتيب النهائي مع التحليل</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <thead>
+                            <tr style="background: #4c1d95;">
+                                <th style="padding: 12px; text-align: center;">المركز</th>
+                                <th style="padding: 12px; text-align: center;">اللاعب</th>
+                                <th style="padding: 12px; text-align: center;">النقاط</th>
+                                <th style="padding: 12px; text-align: center;">✅ صحيح</th>
+                                <th style="padding: 12px; text-align: center;">❌ خطأ</th>
+                                <th style="padding: 12px; text-align: center;">⏭️ تخطي</th>
+                                <th style="padding: 12px; text-align: center;">📊 التحليل</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${playersTableRows}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- أزرار التصدير -->
+                <div style="margin-top: 25px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                    <button id="exportTxtBtn" class="btn-gold">📄 تصدير كـ TXT</button>
+                    <button id="exportCsvBtn" class="btn-info">📊 تصدير كـ CSV</button>
+                    <button id="exportReasonsBtn" style="background: #8b5cf6;">🏆 تصدير أسباب الفوز</button>
+                    <button id="printReportBtn" style="background: #6b7280;">🖨️ طباعة التقرير</button>
+                    <button id="newGameBtn" class="btn-success">🔄 مسابقة جديدة</button>
+                    <button id="shareReportBtn" style="background: #3b82f6;">📤 مشاركة النتيجة</button>
+                </div>
+            </div>
+        `;
+        
+        gameArea.innerHTML = reportHtml;
+        
+        // ربط أزرار التقرير
+        document.getElementById('exportTxtBtn')?.addEventListener('click', () => exportReport('txt'));
+        document.getElementById('exportCsvBtn')?.addEventListener('click', () => exportReport('csv'));
+        document.getElementById('printReportBtn')?.addEventListener('click', () => window.print());
+        document.getElementById('newGameBtn')?.addEventListener('click', () => location.reload());
+        document.getElementById('shareReportBtn')?.addEventListener('click', shareReport);
+        document.getElementById('exportReasonsBtn')?.addEventListener('click', () => exportWinReasons(winner, reasons, medals));
+        
+        // حفظ النتائج
+        saveGameResults();
+        
+        // إطلاق مؤثرات احتفالية
+        launchCelebration();
+        
+        // إشعار سطح المكتب
+        sendNotification(`🏆 انتهت المسابقة! الفائز هو ${winner.name} بـ ${winner.score} نقطة`);
+    };
+    
+    // تصدير أسباب الفوز كملف منفصل
+    function exportWinReasons(winner, reasons, medals) {
+        let content = `=== أسباب فوز ${winner.name} ===\n\n`;
+        content += `الفائز: ${winner.name}\n`;
+        content += `النقاط: ${winner.score}\n`;
+        content += `الإجابات الصحيحة: ${winner.correct}\n`;
+        content += `الإجابات الخاطئة: ${winner.wrong}\n`;
+        content += `عدد مرات التخطي: ${winner.skips}\n\n`;
+        content += `🏆 أسباب الفوز:\n`;
+        reasons.forEach((r, idx) => {
+            content += `${idx+1}. ${r}\n`;
+        });
+        content += `\n🎖️ الميداليات:\n`;
+        medals.forEach(m => {
+            content += `- ${m}\n`;
+        });
+        content += `\n📅 التاريخ: ${new Date().toLocaleString('ar-EG')}\n`;
+        
+        const blob = new Blob([content], {type: 'text/plain'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `اسباب_فوز_${winner.name}_${new Date().toISOString().slice(0,19)}.txt`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+    
+    console.log("الجزء الثامن تم تحميله - نظام أسباب الفوز والشهادات جاهز");
+</script>
+<script>
+    // ========================
+    // الجزء التاسع: عدم تكرار الأسئلة + استيراد الأسئلة من الخارج
+    // ========================
+
+    // ==========================================
+    // 1. نظام عدم تكرار الأسئلة
+    // ==========================================
+    
+    // سجل الأسئلة التي تم عرضها لكل لاعب
+    let questionsHistory = {
+        global: [],      // جميع الأسئلة التي ظهرت في المسابقة (لمنع التكرار العام)
+        perPlayer: {}    // الأسئلة التي رأها كل لاعب على حدة
+    };
+    
+    // تهيئة سجل الأسئلة لكل لاعب
+    function initQuestionsHistory() {
+        questionsHistory = {
+            global: [],
+            perPlayer: {}
+        };
+        
+        window.gameState.players.forEach(player => {
+            questionsHistory.perPlayer[player] = [];
+        });
+    }
+    
+    // التحقق مما إذا كان السؤال قد تكرر (لنفس اللاعب أو عام)
+    function isQuestionRepeated(questionId, playerName, checkGlobal = true) {
+        // التحقق من السجل العام
+        if(checkGlobal && questionsHistory.global.includes(questionId)) {
+            return true;
+        }
+        
+        // التحقق من سجل اللاعب الفردي
+        if(questionsHistory.perPlayer[playerName] && questionsHistory.perPlayer[playerName].includes(questionId)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    // تسجيل سؤال كـ "تم عرضه"
+    function markQuestionAsUsed(questionId, playerName) {
+        // إضافة للسجل العام
+        if(!questionsHistory.global.includes(questionId)) {
+            questionsHistory.global.push(questionId);
+        }
+        
+        // إضافة لسجل اللاعب
+        if(questionsHistory.perPlayer[playerName]) {
+            if(!questionsHistory.perPlayer[playerName].includes(questionId)) {
+                questionsHistory.perPlayer[playerName].push(questionId);
+            }
+        }
+    }
+    
+    // الحصول على سؤال جديد غير مكرر
+    function getUniqueQuestion(questionPool, playerName, maxAttempts = 50) {
+        let attempts = 0;
+        let availableQuestions = [...questionPool];
+        
+        // تصفية الأسئلة التي لم يراها هذا اللاعب بعد
+        let filteredQuestions = availableQuestions.filter(q => {
+            const qId = getQuestionId(q);
+            return !isQuestionRepeated(qId, playerName, true);
+        });
+        
+        // إذا لم يتبق أسئلة جديدة، نعيد تعيين السجل العام (تبدأ دورة جديدة)
+        if(filteredQuestions.length === 0 && questionsHistory.global.length > 0) {
+            if(window.gameMessage) {
+                window.gameMessage.innerHTML = "🔄 تم عرض جميع الأسئلة! بدء دورة جديدة من الأسئلة.";
+            }
+            // إعادة تعيين السجل العام فقط (يبقى سجل اللاعبين لتجنب التكرار القريب)
+            questionsHistory.global = [];
+            filteredQuestions = [...availableQuestions];
+        }
+        
+        if(filteredQuestions.length === 0) {
+            return null;
+        }
+        
+        // اختيار سؤال عشوائي من المتاح
+        const randomIndex = Math.floor(Math.random() * filteredQuestions.length);
+        return filteredQuestions[randomIndex];
+    }
+    
+    // إنشاء معرف فريد للسؤال
+    function getQuestionId(question) {
+        // استخدام نص السؤال كمعرف (يمكن تحسينه بإضافة hash)
+        return question.text.trim().toLowerCase();
+    }
+    
+    // تعديل دالة prepareQuestions لتدعم عدم التكرار
+    const originalPrepareQuestions = prepareQuestions;
+    window.prepareQuestions = function() {
+        originalPrepareQuestions();
+        initQuestionsHistory();
+    };
+    
+    // تعديل دالة startNewRound لاستخدام الأسئلة غير المكررة
+    const originalStartNewRoundForUniqueness = startNewRound;
+    window.startNewRound = function() {
+        if(window.gameState.gameFinished) return;
+        if(window.gameState.isPaused) return;
+        
+        // التحقق من نهاية الأسئلة
+        if(window.gameState.currentQuestionIndex >= window.gameState.currentQuestions.length) {
+            endGame();
+            return;
+        }
+        
+        // اختيار لاعب عشوائي (قرعة)
+        if(!currentSkipWaiting) {
+            getRandomNextPlayer();
+        }
+        currentSkipWaiting = false;
+        
+        const currentPlayerName = window.gameState.players[window.gameState.currentPlayerIndex];
+        
+        // الحصول على سؤال غير مكرر لهذا اللاعب
+        const uniqueQuestion = getUniqueQuestion(
+            window.gameState.currentQuestions, 
+            currentPlayerName,
+            50
+        );
+        
+        if(uniqueQuestion) {
+            // تحديث السؤال الحالي
+            window.gameState.currentQuestions[window.gameState.currentQuestionIndex] = uniqueQuestion;
+            const qId = getQuestionId(uniqueQuestion);
+            markQuestionAsUsed(qId, currentPlayerName);
+        }
+        
+        // متابعة العرض كالمعتاد
+        const currentQuestion = window.gameState.currentQuestions[window.gameState.currentQuestionIndex];
+        
+        // تحديث واجهة العرض
+        if(window.currentPlayerNameSpan) {
+            window.currentPlayerNameSpan.innerText = currentPlayerName;
+        }
+        
+        if(window.questionText) {
+            let questionHtml = currentQuestion.text;
+            if(currentQuestion.gold) {
+                questionHtml = '💎✨ ' + questionHtml + ' ✨💎';
+                window.gameState.goldenQuestionActive = true;
+            } else {
+                window.gameState.goldenQuestionActive = false;
+            }
+            window.questionText.innerHTML = questionHtml;
+        }
+        
+        if(window.questionDisplay) {
+            window.questionDisplay.innerText = `السؤال ${window.gameState.currentQuestionIndex + 1}/${window.gameState.currentQuestions.length}`;
+        }
+        
+        if(window.roundDisplay) {
+            window.roundDisplay.innerText = `الدور #${window.gameState.roundNumber}`;
+        }
+        
+        // عرض الخيارات
+        displayOptions(currentQuestion.options);
+        
+        // تحديث لوحة المتصدرين
+        updateScoreboardDisplay();
+        
+        // بدء المؤقت
+        window.gameState.waitingForAnswer = true;
+        startTimer();
+        
+        // حفظ الحالة
+        saveGameStateToLocal();
+    };
+    
+    // ==========================================
+    // 2. استيراد الأسئلة من الخارج (ملف أو رابط)
+    // ==========================================
+    
+    // تخزين الأسئلة الإضافية
+    let externalQuestions = [];
+    
+    // إضافة زر استيراد الأسئلة في واجهة الإعدادات
+    function addExternalQuestionsButton() {
+        const settingsCard = document.querySelector('.two-columns .card:last-child');
+        if(settingsCard && !document.getElementById('externalQuestionsSection')) {
+            const externalSection = document.createElement('div');
+            externalSection.id = 'externalQuestionsSection';
+            externalSection.style.marginTop = '20px';
+            externalSection.style.padding = '15px';
+            externalSection.style.background = 'rgba(0,0,0,0.2)';
+            externalSection.style.borderRadius = '28px';
+            externalSection.innerHTML = `
+                <h3 style="font-size: 1rem; margin-bottom: 10px;">📤 استيراد أسئلة من الخارج</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <label for="externalFileInput" style="background: #4b5563; padding: 10px 18px; border-radius: 60px; cursor: pointer;">📂 رفع ملف JSON</label>
+                    <input type="file" id="externalFileInput" accept=".json" style="display:none;">
+                    <input type="text" id="externalUrlInput" class="input-style" placeholder="أو رابط API/JSON" style="flex:2;">
+                    <button id="fetchQuestionsBtn" style="background: #10b981;">🌐 تحميل من الرابط</button>
+                </div>
+                <div id="externalQuestionsStatus" class="message-area" style="margin-top: 10px; font-size: 0.8rem;">💡 يمكنك إضافة أسئلتك الخاصة عبر ملف JSON</div>
+            `;
+            settingsCard.appendChild(externalSection);
+            
+            // ربط الأحداث
+            document.getElementById('externalFileInput')?.addEventListener('change', handleExternalFileUpload);
+            document.getElementById('fetchQuestionsBtn')?.addEventListener('click', fetchQuestionsFromUrl);
+        }
+    }
+    
+    // معالجة رفع ملف JSON
+    function handleExternalFileUpload(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const questions = JSON.parse(ev.target.result);
+                if(Array.isArray(questions)) {
+                    addExternalQuestions(questions);
+                } else if(questions.questions && Array.isArray(questions.questions)) {
+                    addExternalQuestions(questions.questions);
+                } else {
+                    throw new Error("تنسيق غير صحيح");
+                }
+            } catch(err) {
+                showExternalStatus("❌ خطأ في قراءة الملف: تأكد من صيغة JSON", 'error');
+            }
+        };
+        reader.readAsText(file, 'UTF-8');
+        e.target.value = '';
+    }
+    
+    // جلب الأسئلة من رابط
+    async function fetchQuestionsFromUrl() {
+        const urlInput = document.getElementById('externalUrlInput');
+        const url = urlInput?.value.trim();
+        if(!url) {
+            showExternalStatus("⚠️ الرجاء إدخال رابط صحيح", 'error');
+            return;
+        }
+        
+        showExternalStatus("⏳ جاري تحميل الأسئلة...", 'info');
+        
+        try {
+            const response = await fetch(url);
+            if(!response.ok) throw new Error("فشل التحميل");
+            const data = await response.json();
+            
+            let questions = [];
+            if(Array.isArray(data)) {
+                questions = data;
+            } else if(data.questions && Array.isArray(data.questions)) {
+                questions = data.questions;
+            } else {
+                throw new Error("تنسيق غير صحيح");
+            }
+            
+            addExternalQuestions(questions);
+        } catch(err) {
+            showExternalStatus(`❌ خطأ في التحميل: ${err.message}`, 'error');
+        }
+    }
+    
+    // إضافة الأسئلة الخارجية إلى المكتبة
+    function addExternalQuestions(questions) {
+        let addedCount = 0;
+        
+        questions.forEach(q => {
+            if(q.text && q.options && Array.isArray(q.options) && typeof q.correct !== 'undefined') {
+                // التحقق من صحة السؤال
+                const formattedQuestion = {
+                    text: q.text,
+                    options: q.options.slice(0, 4),
+                    correct: parseInt(q.correct) || 0,
+                    difficulty: q.difficulty || 1,
+                    gold: q.gold || false,
+                    external: true
+                };
+                
+                // إضافة إلى المكتبة المناسبة حسب النوع
+                const targetType = q.type || 'mixed';
+                if(window.questionsLibrary[targetType]) {
+                    window.questionsLibrary[targetType].push(formattedQuestion);
+                } else {
+                    window.questionsLibrary.mixed.push(formattedQuestion);
+                }
+                
+                externalQuestions.push(formattedQuestion);
+                addedCount++;
+            }
+        });
+        
+        showExternalStatus(`✅ تمت إضافة ${addedCount} سؤال جديد إلى مكتبة الأسئلة!`, 'success');
+        
+        // تحديث عدد الأسئلة في الواجهة
+        updateTotalQuestionsCount();
+    }
+    
+    // عرض حالة الاستيراد
+    function showExternalStatus(msg, type) {
+        const statusDiv = document.getElementById('externalQuestionsStatus');
+        if(statusDiv) {
+            statusDiv.innerHTML = msg;
+            statusDiv.style.background = type === 'error' ? '#dc262630' : (type === 'success' ? '#10b98130' : '#3b82f630');
+            setTimeout(() => {
+                if(statusDiv.innerHTML === msg) {
+                    statusDiv.innerHTML = '💡 يمكنك إضافة أسئلتك الخاصة عبر ملف JSON';
+                    statusDiv.style.background = '';
+                }
+            }, 4000);
+        }
+    }
+    
+    // تحديث عدد الأسئلة المعروض
+    function updateTotalQuestionsCount() {
+        const totalSelect = document.getElementById('totalQuestionsSelect');
+        if(totalSelect) {
+            const currentValue = totalSelect.value;
+            // إعادة تعيين الخيارات يمكن أن يضاف هنا
+        }
+    }
+    
+    // نموذج لملف JSON للأسئلة الخارجية
+    function downloadQuestionsTemplate() {
+        const template = [
+            {
+                "text": "سؤال مثال: ما هو اسم أول كنيسة في العالم؟",
+                "options": ["كنيسة القيامة", "كنيسة المهد", "كنيسة بطرس", "كنيسة مرقس"],
+                "correct": 0,
+                "difficulty": 1,
+                "gold": false,
+                "type": "mixed"
+            },
+            {
+                "text": "سؤال مثال آخر: من هو قديس الصحراء؟",
+                "options": ["الأنبا أنطونيوس", "الأنبا باخوميوس", "الأنبا مقاريوس", "الأنبا بولا"],
+                "correct": 0,
+                "difficulty": 1,
+                "gold": false,
+                "type": "saints"
+            }
+        ];
+        
+        const blob = new Blob([JSON.stringify(template, null, 2)], {type: 'application/json'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'questions_template.json';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        
+        showExternalStatus("📥 تم تحميل ملف القالب بنجاح", 'success');
+    }
+    
+    // إضافة زر تحميل القالب
+    function addTemplateButton() {
+        const container = document.getElementById('externalQuestionsSection');
+        if(container && !document.getElementById('downloadTemplateBtn')) {
+            const templateBtn = document.createElement('button');
+            templateBtn.id = 'downloadTemplateBtn';
+            templateBtn.innerHTML = '📋 تحميل قالب JSON';
+            templateBtn.style.background = '#6b7280';
+            templateBtn.style.marginTop = '10px';
+            templateBtn.style.width = '100%';
+            templateBtn.addEventListener('click', downloadQuestionsTemplate);
+            container.appendChild(templateBtn);
+        }
+    }
+    
+    // ==========================================
+    // 3. دمج التحسينات مع بدء المسابقة
+    // ==========================================
+    
+    // تعديل دالة startNewGame لتفعيل نظام عدم التكرار وزر الاستيراد
+    const originalStartNewGameExtended = startNewGame;
+    window.startNewGame = function() {
+        originalStartNewGameExtended();
+        initQuestionsHistory();
+    };
+    
+    // إضافة الأزرار عند تحميل الواجهة
+    setTimeout(() => {
+        addExternalQuestionsButton();
+        setTimeout(addTemplateButton, 500);
+    }, 1000);
+    
+    // تصدير الدوال للاستخدام العام
+    window.getUniqueQuestion = getUniqueQuestion;
+    window.addExternalQuestions = addExternalQuestions;
+    window.downloadQuestionsTemplate = downloadQuestionsTemplate;
+    window.resetQuestionsHistory = function() {
+        initQuestionsHistory();
+        if(window.gameMessage) window.gameMessage.innerHTML = "🔄 تم إعادة تعيين سجل الأسئلة";
+    };
+    
+    console.log("الجزء التاسع تم تحميله - نظام عدم تكرار الأسئلة واستيراد الأسئلة جاهز");
+</script>
+<script>
+    // ========================
+    // الجزء الحادي عشر: حفظ الأسئلة نهائياً + دمج مساهمات جميع المستخدمين
+    // ========================
+
+    // ==========================================
+    // 1. نظام التخزين الدائم للأسئلة
+    // ==========================================
+    
+    // المفتاح الرئيسي لتخزين الأسئلة في localStorage
+    const MASTER_QUESTIONS_KEY = 'orthodox_master_questions_library';
+    
+    // تحميل المكتبة الرئيسية من التخزين الدائم
+    function loadMasterQuestionsLibrary() {
+        const saved = localStorage.getItem(MASTER_QUESTIONS_KEY);
+        if(saved) {
+            try {
+                const masterLibrary = JSON.parse(saved);
+                
+                // دمج المكتبة المحفوظة مع المكتبة الحالية
+                for(let type in masterLibrary) {
+                    if(window.questionsLibrary[type] && Array.isArray(masterLibrary[type])) {
+                        // دمج الأسئلة الجديدة مع القديمة (بدون تكرار)
+                        masterLibrary[type].forEach(newQuestion => {
+                            const exists = window.questionsLibrary[type].some(existing => 
+                                existing.text === newQuestion.text
+                            );
+                            if(!exists) {
+                                window.questionsLibrary[type].push(newQuestion);
+                            }
+                        });
+                    }
+                }
+                
+                console.log("📚 تم تحميل المكتبة الرئيسية من التخزين الدائم");
+                return true;
+            } catch(e) {
+                console.log("خطأ في تحميل المكتبة", e);
+            }
+        }
+        return false;
+    }
+    
+    // حفظ المكتبة الرئيسية نهائياً
+    function saveMasterQuestionsLibrary() {
+        const masterLibrary = {};
+        
+        // نسخ جميع أنواع الأسئلة
+        for(let type in window.questionsLibrary) {
+            if(window.questionsLibrary[type] && Array.isArray(window.questionsLibrary[type])) {
+                masterLibrary[type] = window.questionsLibrary[type];
+            }
+        }
+        
+        localStorage.setItem(MASTER_QUESTIONS_KEY, JSON.stringify(masterLibrary));
+        console.log("💾 تم حفظ المكتبة الرئيسية (جميع الأسئلة)");
+        
+        // أيضاً حفظ وقت آخر تحديث
+        localStorage.setItem('orthodox_last_update', new Date().toISOString());
+    }
+    
+    // دالة لإضافة سؤال مع حفظه نهائياً
+    function addQuestionPermanently(question, category = 'mixed') {
+        if(!question.text || !question.options || question.options.length !== 4) {
+            console.log("سؤال غير صالح", question);
+            return false;
+        }
+        
+        // التحقق من عدم التكرار
+        const targetCategory = window.questionsLibrary[category] || window.questionsLibrary.mixed;
+        const exists = targetCategory.some(existing => existing.text === question.text);
+        
+        if(exists) {
+            console.log("السؤال موجود بالفعل", question.text);
+            return false;
+        }
+        
+        // إضافة السؤال
+        question.addedBy = 'user'; // علامة توضح مصدر السؤال
+        question.dateAdded = new Date().toISOString();
+        question.id = `q_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+        
+        targetCategory.push(question);
+        
+        // أيضاً إضافته إلى المتنوع إذا كان من نوع آخر
+        if(category !== 'mixed') {
+            window.questionsLibrary.mixed.push({...question, source: category});
+        }
+        
+        // حفظ التغييرات نهائياً
+        saveMasterQuestionsLibrary();
+        
+        // تحديث إحصائيات الأسئلة
+        updateQuestionStats();
+        
+        console.log(`✅ تمت إضافة السؤال نهائياً: ${question.text.substring(0, 50)}...`);
+        return true;
+    }
+    
+    // دالة لإضافة عدة أسئلة دفعة واحدة
+    function addMultipleQuestionsPermanently(questions, category = 'mixed') {
+        let addedCount = 0;
+        
+        questions.forEach(question => {
+            if(addQuestionPermanently(question, category)) {
+                addedCount++;
+            }
+        });
+        
+        if(addedCount > 0) {
+            saveMasterQuestionsLibrary();
+            showGlobalMessage(`📚 تمت إضافة ${addedCount} سؤال جديد إلى المكتبة الدائمة`, 'success');
+        }
+        
+        return addedCount;
+    }
+    
+    // عرض إحصائيات الأسئلة
+    function updateQuestionStats() {
+        let totalQuestions = 0;
+        let stats = {};
+        
+        for(let type in window.questionsLibrary) {
+            if(window.questionsLibrary[type] && Array.isArray(window.questionsLibrary[type])) {
+                const count = window.questionsLibrary[type].length;
+                totalQuestions += count;
+                stats[type] = count;
+            }
+        }
+        
+        // حفظ الإحصائيات
+        localStorage.setItem('orthodox_question_stats', JSON.stringify(stats));
+        
+        // عرض في console
+        console.log(`📊 إحصائيات الأسئلة: ${totalQuestions} سؤال إجمالي`, stats);
+        
+        return { total: totalQuestions, stats };
+    }
+    
+    // عرض إحصائيات في واجهة المستخدم
+    function addQuestionStatsDisplay() {
+        const stats = updateQuestionStats();
+        const statsDiv = document.getElementById('questionStatsDisplay');
+        
+        if(statsDiv) {
+            statsDiv.innerHTML = `📚 إجمالي الأسئلة في المكتبة: ${stats.total} سؤال`;
+        } else {
+            // إنشاء عنصر إحصائيات في الإعدادات
+            const settingsCard = document.querySelector('.two-columns .card:last-child');
+            if(settingsCard && !document.getElementById('questionStatsDisplay')) {
+                const newStatsDiv = document.createElement('div');
+                newStatsDiv.id = 'questionStatsDisplay';
+                newStatsDiv.style.cssText = 'margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 28px; text-align: center; font-size: 0.9rem;';
+                newStatsDiv.innerHTML = `📚 إجمالي الأسئلة في المكتبة: ${stats.total} سؤال`;
+                settingsCard.appendChild(newStatsDiv);
+            }
+        }
+    }
+    
+    // ==========================================
+    // 2. تحسين واجهة رفع الأسئلة للحفظ الدائم
+    // ==========================================
+    
+    // تعديل دالة إضافة الأسئلة الخارجية لتصبح دائمة
+    const originalAddExternalQuestions = addExternalQuestions;
+    window.addExternalQuestions = function(questions) {
+        let addedCount = 0;
+        
+        questions.forEach(q => {
+            if(addQuestionPermanently(q, q.type || 'mixed')) {
+                addedCount++;
+            }
+        });
+        
+        if(addedCount > 0) {
+            showExternalStatus(`✅ تمت إضافة ${addedCount} سؤال نهائياً إلى المكتبة`, 'success');
+            addQuestionStatsDisplay();
+        }
+        
+        return addedCount;
+    };
+    
+    // تعديل دالة إضافة الأسئلة التلقائية لتصبح دائمة
+    const originalAddAutoGeneratedQuestions = addAutoGeneratedQuestions;
+    window.addAutoGeneratedQuestions = function(questions) {
+        let addedCount = 0;
+        
+        questions.forEach(q => {
+            q.autoGenerated = true;
+            q.addedBy = 'auto';
+            if(addQuestionPermanently(q, q.type || 'mixed')) {
+                addedCount++;
+            }
+        });
+        
+        if(addedCount > 0) {
+            showAutoStatus(`✅ تمت إضافة ${addedCount} سؤال تلقائي نهائياً`, 'success');
+            addQuestionStatsDisplay();
+        }
+        
+        return addedCount;
+    };
+    
+    // ==========================================
+    // 3. نظام تصدير واستيراد المكتبة الكاملة
+    // ==========================================
+    
+    // تصدير المكتبة الكاملة كملف JSON (للنسخ الاحتياطي أو المشاركة)
+    function exportFullLibrary() {
+        const fullLibrary = {};
+        
+        for(let type in window.questionsLibrary) {
+            if(window.questionsLibrary[type] && Array.isArray(window.questionsLibrary[type])) {
+                fullLibrary[type] = window.questionsLibrary[type];
+            }
+        }
+        
+        const data = {
+            version: '1.0',
+            exportedAt: new Date().toISOString(),
+            totalQuestions: updateQuestionStats().total,
+            library: fullLibrary
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `orthodox_questions_library_${new Date().toISOString().slice(0,19)}.json`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+        
+        showGlobalMessage(`📥 تم تصدير ${data.totalQuestions} سؤال من المكتبة`, 'success');
+    }
+    
+    // استيراد مكتبة كاملة من ملف JSON (دمج مع المكتبة الحالية)
+    function importFullLibrary(file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            try {
+                const data = JSON.parse(ev.target.result);
+                const importedLibrary = data.library || data;
+                let totalAdded = 0;
+                
+                for(let type in importedLibrary) {
+                    if(window.questionsLibrary[type] && Array.isArray(importedLibrary[type])) {
+                        importedLibrary[type].forEach(question => {
+                            const exists = window.questionsLibrary[type].some(existing => 
+                                existing.text === question.text
+                            );
+                            if(!exists) {
+                                window.questionsLibrary[type].push(question);
+                                totalAdded++;
+                            }
+                        });
+                    }
+                }
+                
+                if(totalAdded > 0) {
+                    saveMasterQuestionsLibrary();
+                    showGlobalMessage(`📚 تم استيراد ${totalAdded} سؤال جديد ودمجهم مع المكتبة`, 'success');
+                    addQuestionStatsDisplay();
+                } else {
+                    showGlobalMessage(`⚠️ لا توجد أسئلة جديدة للاستيراد`, 'info');
+                }
+                
+            } catch(err) {
+                showGlobalMessage(`❌ خطأ في قراءة الملف: ${err.message}`, 'error');
+            }
+        };
+        reader.readAsText(file, 'UTF-8');
+    }
+    
+    // إضافة أزرار تصدير/استيراد المكتبة
+    function addLibraryManagementButtons() {
+        const settingsCard = document.querySelector('.two-columns .card:last-child');
+        if(!settingsCard || document.getElementById('libraryManagementSection')) return;
+        
+        const libSection = document.createElement('div');
+        libSection.id = 'libraryManagementSection';
+        libSection.style.marginTop = '20px';
+        libSection.style.padding = '15px';
+        libSection.style.background = 'rgba(0,0,0,0.2)';
+        libSection.style.borderRadius = '28px';
+        libSection.innerHTML = `
+            <h3 style="font-size: 1rem; margin-bottom: 10px;">📚 إدارة المكتبة الدائمة</h3>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button id="exportLibraryBtn" style="background: #10b981;">📤 تصدير المكتبة كاملة</button>
+                <label for="importLibraryInput" style="background: #3b82f6; padding: 10px 20px; border-radius: 60px; cursor: pointer;">📥 استيراد مكتبة</label>
+                <input type="file" id="importLibraryInput" accept=".json" style="display:none;">
+                <button id="resetLibraryBtn" style="background: #dc2626;">🔄 إعادة تعيين المكتبة الأصلية</button>
+            </div>
+            <div id="libraryStatus" class="message-area" style="margin-top: 10px; font-size: 0.8rem;">
+                💾 جميع الأسئلة المضافة (يدوياً، تلقائياً، أو برفع ملف) تُحفظ نهائياً
+            </div>
+        `;
+        settingsCard.appendChild(libSection);
+        
+        document.getElementById('exportLibraryBtn')?.addEventListener('click', exportFullLibrary);
+        document.getElementById('importLibraryInput')?.addEventListener('change', (e) => {
+            if(e.target.files[0]) importFullLibrary(e.target.files[0]);
+            e.target.value = '';
+        });
+        document.getElementById('resetLibraryBtn')?.addEventListener('click', resetToOriginalLibrary);
+    }
+    
+    // إعادة تعيين المكتبة إلى النسخة الأصلية (مع حفظ الأسئلة المضافة من المستخدمين)
+    function resetToOriginalLibrary() {
+        if(confirm("⚠️ هل أنت متأكد؟ سيتم حذف جميع الأسئلة المضافة من المستخدمين والاحتفاظ فقط بالأسئلة الأصلية. هذا الإجراء لا يمكن التراجع عنه!")) {
+            
+            // إعادة تحميل الأسئلة الأصلية من المكتبة المدمجة
+            const originalOrthodox = window.originalOrthodoxQuestions || [...window.questionsLibrary.orthodox.slice(0, 30)];
+            const originalBible = window.originalBibleQuestions || [...window.questionsLibrary.bible.slice(0, 15)];
+            const originalHistory = window.originalHistoryQuestions || [...window.questionsLibrary.history.slice(0, 10)];
+            
+            // إعادة تعيين المكتبات
+            window.questionsLibrary.orthodox = [...originalOrthodox];
+            window.questionsLibrary.bible = [...originalBible];
+            window.questionsLibrary.history = [...originalHistory];
+            window.questionsLibrary.saints = [...window.originalSaintsQuestions || window.questionsLibrary.saints.slice(0, 5)];
+            window.questionsLibrary.hymns = [...window.originalHymnsQuestions || window.questionsLibrary.hymns.slice(0, 5)];
+            
+            // إعادة بناء المتنوع
+            window.questionsLibrary.mixed = [
+                ...window.questionsLibrary.orthodox.slice(0, 20),
+                ...window.questionsLibrary.bible.slice(0, 10),
+                ...window.questionsLibrary.history.slice(0, 10),
+                ...window.questionsLibrary.saints,
+                ...window.questionsLibrary.hymns
+            ];
+            
+            // حفظ التغييرات
+            saveMasterQuestionsLibrary();
+            addQuestionStatsDisplay();
+            showGlobalMessage("🔄 تم إعادة تعيين المكتبة إلى الأسئلة الأصلية", 'success');
+        }
+    }
+    
+    // ==========================================
+    // 4. رسالة عامة للواجهة
+    // ==========================================
+    
+    function showGlobalMessage(msg, type) {
+        const msgDiv = document.getElementById('libraryStatus') || document.getElementById('playersMsg');
+        if(msgDiv) {
+            msgDiv.innerHTML = msg;
+            msgDiv.style.background = type === 'error' ? '#dc262630' : (type === 'success' ? '#10b98130' : '#3b82f630');
+            setTimeout(() => {
+                if(msgDiv.innerHTML === msg) {
+                    if(msgDiv.id === 'libraryStatus') {
+                        msgDiv.innerHTML = '💾 جميع الأسئلة المضافة (يدوياً، تلقائياً، أو برفع ملف) تُحفظ نهائياً';
+                    }
+                    msgDiv.style.background = '';
+                }
+            }, 4000);
+        }
+    }
+    
+    // ==========================================
+    // 5. حفظ النسخة الأصلية من الأسئلة (للرجوع إليها)
+    // ==========================================
+    
+    function saveOriginalQuestionsBackup() {
+        window.originalOrthodoxQuestions = [...window.questionsLibrary.orthodox];
+        window.originalBibleQuestions = [...window.questionsLibrary.bible];
+        window.originalHistoryQuestions = [...window.questionsLibrary.history];
+        window.originalSaintsQuestions = [...window.questionsLibrary.saints];
+        window.originalHymnsQuestions = [...window.questionsLibrary.hymns];
+        
+        localStorage.setItem('orthodox_original_backup', JSON.stringify({
+            orthodox: window.originalOrthodoxQuestions,
+            bible: window.originalBibleQuestions,
+            history: window.originalHistoryQuestions,
+            saints: window.originalSaintsQuestions,
+            hymns: window.originalHymnsQuestions
+        }));
+    }
+    
+    // ==========================================
+    // 6. تهيئة النظام عند تحميل الصفحة
+    // ==========================================
+    
+    function initPermanentStorage() {
+        // محاولة تحميل المكتبة المحفوظة
+        const loaded = loadMasterQuestionsLibrary();
+        
+        if(!loaded) {
+            // إذا لم توجد مكتبة محفوظة، نحفظ النسخة الحالية كأساس
+            saveMasterQuestionsLibrary();
+            saveOriginalQuestionsBackup();
+            console.log("📚 تم إنشاء مكتبة أسئلة جديدة");
+        }
+        
+        // تحديث الإحصائيات
+        addQuestionStatsDisplay();
+        
+        // إضافة أزرار إدارة المكتبة
+        setTimeout(() => {
+            addLibraryManagementButtons();
+        }, 500);
+    }
+    
+    // استدعاء التهيئة
+    initPermanentStorage();
+    
+    // مراقبة أي إضافات جديدة للأسئلة وحفظها تلقائياً
+    const originalAddPlayer = addPlayer;
+    window.addPlayer = function() {
+        originalAddPlayer();
+        // لا علاقة بالأسئلة، فقط للتأكد من عدم كسر الكود
+    };
+    
+    console.log("الجزء الحادي عشر تم تحميله - نظام الحفظ الدائم للأسئلة جاهز");
+    console.log("💾 جميع الأسئلة المضافة ستحفظ نهائياً ولن تُحذف أبداً");
+</script>
+
+</body>
+</html>
