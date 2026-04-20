@@ -2771,420 +2771,211 @@
     };
     
     console.log("الجزء التاسع تم تحميله - نظام عدم تكرار الأسئلة واستيراد الأسئلة جاهز");
-</script>
+</script>        
 <script>
     // ========================
-    // الجزء الحادي عشر: حفظ الأسئلة نهائياً + دمج مساهمات جميع المستخدمين
+    // الجزء الحادي عشر المعدل: حفظ الأسئلة نهائياً ومشاركتها بين الأجهزة
     // ========================
 
-    // ==========================================
-    // 1. نظام التخزين الدائم للأسئلة
-    // ==========================================
-    
-    // المفتاح الرئيسي لتخزين الأسئلة في localStorage
     const MASTER_QUESTIONS_KEY = 'orthodox_master_questions_library';
-    
-    // تحميل المكتبة الرئيسية من التخزين الدائم
-    function loadMasterQuestionsLibrary() {
-        const saved = localStorage.getItem(MASTER_QUESTIONS_KEY);
-        if(saved) {
-            try {
-                const masterLibrary = JSON.parse(saved);
-                
-                // دمج المكتبة المحفوظة مع المكتبة الحالية
-                for(let type in masterLibrary) {
-                    if(window.questionsLibrary[type] && Array.isArray(masterLibrary[type])) {
-                        // دمج الأسئلة الجديدة مع القديمة (بدون تكرار)
-                        masterLibrary[type].forEach(newQuestion => {
-                            const exists = window.questionsLibrary[type].some(existing => 
-                                existing.text === newQuestion.text
-                            );
-                            if(!exists) {
+
+    // 1. دالة الحفظ على السيرفر
+    async function saveMasterQuestionsLibrary() {
+        // تجهيز البيانات
+        const libraryToSave = {};
+        for (let type in window.questionsLibrary) {
+            if (window.questionsLibrary[type] && Array.isArray(window.questionsLibrary[type])) {
+                libraryToSave[type] = window.questionsLibrary[type];
+            }
+        }
+
+        // محاولة الحفظ على السيرفر
+        try {
+            const response = await fetch('save_questions.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ questions: libraryToSave })
+            });
+            const result = await response.json();
+            if (result.success) {
+                console.log("💾 تم حفظ المكتبة على السيرفر بنجاح");
+            } else {
+                console.log("⚠️ فشل الحفظ على السيرفر");
+            }
+        } catch (error) {
+            console.error("❌ خطأ في الاتصال بالسيرفر:", error);
+            // حفظ احتياطي محلي في حالة عدم وجود اتصال
+            localStorage.setItem(MASTER_QUESTIONS_KEY, JSON.stringify(libraryToSave));
+        }
+    }
+
+    // 2. دالة التحميل من السيرفر
+    async function loadMasterQuestionsLibrary() {
+        try {
+            const response = await fetch('save_questions.php');
+            const serverData = await response.json();
+            
+            // إذا وجدت بيانات على السيرفر
+            if (serverData && Object.keys(serverData).length > 0) {
+                for (let type in serverData) {
+                    if (window.questionsLibrary[type] && Array.isArray(serverData[type])) {
+                        serverData[type].forEach(newQuestion => {
+                            // التحقق من عدم التكرار قبل الإضافة
+                            const exists = window.questionsLibrary[type].some(existing => existing.text === newQuestion.text);
+                            if (!exists) {
                                 window.questionsLibrary[type].push(newQuestion);
                             }
                         });
                     }
                 }
-                
-                console.log("📚 تم تحميل المكتبة الرئيسية من التخزين الدائم");
+                console.log("📚 تم تحميل المكتبة من السيرفر");
+                updateQuestionStats(); // تحديث الإحصائيات بعد التحميل
                 return true;
-            } catch(e) {
-                console.log("خطأ في تحميل المكتبة", e);
             }
-        }
-        return false;
-    }
-    
-    // حفظ المكتبة الرئيسية نهائياً
-    function saveMasterQuestionsLibrary() {
-        const masterLibrary = {};
-        
-        // نسخ جميع أنواع الأسئلة
-        for(let type in window.questionsLibrary) {
-            if(window.questionsLibrary[type] && Array.isArray(window.questionsLibrary[type])) {
-                masterLibrary[type] = window.questionsLibrary[type];
-            }
-        }
-        
-        localStorage.setItem(MASTER_QUESTIONS_KEY, JSON.stringify(masterLibrary));
-        console.log("💾 تم حفظ المكتبة الرئيسية (جميع الأسئلة)");
-        
-        // أيضاً حفظ وقت آخر تحديث
-        localStorage.setItem('orthodox_last_update', new Date().toISOString());
-    }
-    
-    // دالة لإضافة سؤال مع حفظه نهائياً
-    function addQuestionPermanently(question, category = 'mixed') {
-        if(!question.text || !question.options || question.options.length !== 4) {
-            console.log("سؤال غير صالح", question);
-            return false;
-        }
-        
-        // التحقق من عدم التكرار
-        const targetCategory = window.questionsLibrary[category] || window.questionsLibrary.mixed;
-        const exists = targetCategory.some(existing => existing.text === question.text);
-        
-        if(exists) {
-            console.log("السؤال موجود بالفعل", question.text);
-            return false;
-        }
-        
-        // إضافة السؤال
-        question.addedBy = 'user'; // علامة توضح مصدر السؤال
-        question.dateAdded = new Date().toISOString();
-        question.id = `q_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-        
-        targetCategory.push(question);
-        
-        // أيضاً إضافته إلى المتنوع إذا كان من نوع آخر
-        if(category !== 'mixed') {
-            window.questionsLibrary.mixed.push({...question, source: category});
-        }
-        
-        // حفظ التغييرات نهائياً
-        saveMasterQuestionsLibrary();
-        
-        // تحديث إحصائيات الأسئلة
-        updateQuestionStats();
-        
-        console.log(`✅ تمت إضافة السؤال نهائياً: ${question.text.substring(0, 50)}...`);
-        return true;
-    }
-    
-    // دالة لإضافة عدة أسئلة دفعة واحدة
-    function addMultipleQuestionsPermanently(questions, category = 'mixed') {
-        let addedCount = 0;
-        
-        questions.forEach(question => {
-            if(addQuestionPermanently(question, category)) {
-                addedCount++;
-            }
-        });
-        
-        if(addedCount > 0) {
-            saveMasterQuestionsLibrary();
-            showGlobalMessage(`📚 تمت إضافة ${addedCount} سؤال جديد إلى المكتبة الدائمة`, 'success');
-        }
-        
-        return addedCount;
-    }
-    
-    // عرض إحصائيات الأسئلة
-    function updateQuestionStats() {
-        let totalQuestions = 0;
-        let stats = {};
-        
-        for(let type in window.questionsLibrary) {
-            if(window.questionsLibrary[type] && Array.isArray(window.questionsLibrary[type])) {
-                const count = window.questionsLibrary[type].length;
-                totalQuestions += count;
-                stats[type] = count;
-            }
-        }
-        
-        // حفظ الإحصائيات
-        localStorage.setItem('orthodox_question_stats', JSON.stringify(stats));
-        
-        // عرض في console
-        console.log(`📊 إحصائيات الأسئلة: ${totalQuestions} سؤال إجمالي`, stats);
-        
-        return { total: totalQuestions, stats };
-    }
-    
-    // عرض إحصائيات في واجهة المستخدم
-    function addQuestionStatsDisplay() {
-        const stats = updateQuestionStats();
-        const statsDiv = document.getElementById('questionStatsDisplay');
-        
-        if(statsDiv) {
-            statsDiv.innerHTML = `📚 إجمالي الأسئلة في المكتبة: ${stats.total} سؤال`;
-        } else {
-            // إنشاء عنصر إحصائيات في الإعدادات
-            const settingsCard = document.querySelector('.two-columns .card:last-child');
-            if(settingsCard && !document.getElementById('questionStatsDisplay')) {
-                const newStatsDiv = document.createElement('div');
-                newStatsDiv.id = 'questionStatsDisplay';
-                newStatsDiv.style.cssText = 'margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 28px; text-align: center; font-size: 0.9rem;';
-                newStatsDiv.innerHTML = `📚 إجمالي الأسئلة في المكتبة: ${stats.total} سؤال`;
-                settingsCard.appendChild(newStatsDiv);
-            }
-        }
-    }
-    
-    // ==========================================
-    // 2. تحسين واجهة رفع الأسئلة للحفظ الدائم
-    // ==========================================
-    
-    // تعديل دالة إضافة الأسئلة الخارجية لتصبح دائمة
-    const originalAddExternalQuestions = addExternalQuestions;
-    window.addExternalQuestions = function(questions) {
-        let addedCount = 0;
-        
-        questions.forEach(q => {
-            if(addQuestionPermanently(q, q.type || 'mixed')) {
-                addedCount++;
-            }
-        });
-        
-        if(addedCount > 0) {
-            showExternalStatus(`✅ تمت إضافة ${addedCount} سؤال نهائياً إلى المكتبة`, 'success');
-            addQuestionStatsDisplay();
-        }
-        
-        return addedCount;
-    };
-    
-    // تعديل دالة إضافة الأسئلة التلقائية لتصبح دائمة
-    const originalAddAutoGeneratedQuestions = addAutoGeneratedQuestions;
-    window.addAutoGeneratedQuestions = function(questions) {
-        let addedCount = 0;
-        
-        questions.forEach(q => {
-            q.autoGenerated = true;
-            q.addedBy = 'auto';
-            if(addQuestionPermanently(q, q.type || 'mixed')) {
-                addedCount++;
-            }
-        });
-        
-        if(addedCount > 0) {
-            showAutoStatus(`✅ تمت إضافة ${addedCount} سؤال تلقائي نهائياً`, 'success');
-            addQuestionStatsDisplay();
-        }
-        
-        return addedCount;
-    };
-    
-    // ==========================================
-    // 3. نظام تصدير واستيراد المكتبة الكاملة
-    // ==========================================
-    
-    // تصدير المكتبة الكاملة كملف JSON (للنسخ الاحتياطي أو المشاركة)
-    function exportFullLibrary() {
-        const fullLibrary = {};
-        
-        for(let type in window.questionsLibrary) {
-            if(window.questionsLibrary[type] && Array.isArray(window.questionsLibrary[type])) {
-                fullLibrary[type] = window.questionsLibrary[type];
-            }
-        }
-        
-        const data = {
-            version: '1.0',
-            exportedAt: new Date().toISOString(),
-            totalQuestions: updateQuestionStats().total,
-            library: fullLibrary
-        };
-        
-        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `orthodox_questions_library_${new Date().toISOString().slice(0,19)}.json`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-        
-        showGlobalMessage(`📥 تم تصدير ${data.totalQuestions} سؤال من المكتبة`, 'success');
-    }
-    
-    // استيراد مكتبة كاملة من ملف JSON (دمج مع المكتبة الحالية)
-    function importFullLibrary(file) {
-        const reader = new FileReader();
-        reader.onload = function(ev) {
-            try {
-                const data = JSON.parse(ev.target.result);
-                const importedLibrary = data.library || data;
-                let totalAdded = 0;
-                
-                for(let type in importedLibrary) {
-                    if(window.questionsLibrary[type] && Array.isArray(importedLibrary[type])) {
-                        importedLibrary[type].forEach(question => {
-                            const exists = window.questionsLibrary[type].some(existing => 
-                                existing.text === question.text
-                            );
-                            if(!exists) {
-                                window.questionsLibrary[type].push(question);
-                                totalAdded++;
+        } catch (error) {
+            console.log("⚠️ فشل الاتصال بالسيرفر، استخدام النسخة المحلية");
+            // الرجوع إلى localStorage
+            const saved = localStorage.getItem(MASTER_QUESTIONS_KEY);
+            if (saved) {
+                const masterLibrary = JSON.parse(saved);
+                for (let type in masterLibrary) {
+                    if (window.questionsLibrary[type] && Array.isArray(masterLibrary[type])) {
+                        masterLibrary[type].forEach(newQuestion => {
+                            const exists = window.questionsLibrary[type].some(existing => existing.text === newQuestion.text);
+                            if (!exists) {
+                                window.questionsLibrary[type].push(newQuestion);
                             }
                         });
                     }
                 }
-                
-                if(totalAdded > 0) {
-                    saveMasterQuestionsLibrary();
-                    showGlobalMessage(`📚 تم استيراد ${totalAdded} سؤال جديد ودمجهم مع المكتبة`, 'success');
-                    addQuestionStatsDisplay();
-                } else {
-                    showGlobalMessage(`⚠️ لا توجد أسئلة جديدة للاستيراد`, 'info');
+                console.log("📚 تم تحميل المكتبة من localStorage");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // 3. دالة الإضافة (تضيف وتحفظ على السيرفر فوراً)
+    function addQuestionPermanently(question, category = 'mixed') {
+        if (!question.text || !question.options || question.options.length !== 4) return false;
+        
+        const targetCategory = window.questionsLibrary[category] || window.questionsLibrary.mixed;
+        const exists = targetCategory.some(existing => existing.text === question.text);
+        if (exists) return false;
+        
+        question.addedBy = 'user';
+        question.dateAdded = new Date().toISOString();
+        targetCategory.push(question);
+        
+        if (category !== 'mixed') {
+            window.questionsLibrary.mixed.push({ ...question, source: category });
+        }
+        
+        saveMasterQuestionsLibrary(); // حفظ فوري على السيرفر
+        updateQuestionStats();
+        return true;
+    }
+
+    // 4. إحصائيات الأسئلة
+    function updateQuestionStats() {
+        let total = 0;
+        for (let type in window.questionsLibrary) {
+            if (Array.isArray(window.questionsLibrary[type])) total += window.questionsLibrary[type].length;
+        }
+        const statsDiv = document.getElementById('questionStatsDisplay');
+        if (statsDiv) statsDiv.innerHTML = `📚 إجمالي الأسئلة: ${total} سؤال`;
+        return total;
+    }
+
+    // 5. واجهة الإحصائيات
+    function addQuestionStatsDisplay() {
+        const card = document.querySelector('.two-columns .card:last-child');
+        if (card && !document.getElementById('questionStatsDisplay')) {
+            const div = document.createElement('div');
+            div.id = 'questionStatsDisplay';
+            div.style.cssText = 'margin-top:15px; padding:10px; background:rgba(0,0,0,0.2); border-radius:28px; text-align:center;';
+            card.appendChild(div);
+            updateQuestionStats();
+        }
+    }
+
+    // 6. تصدير المكتبة كملف JSON
+    function exportFullLibrary() {
+        const data = {};
+        for (let type in window.questionsLibrary) {
+            if (Array.isArray(window.questionsLibrary[type])) data[type] = window.questionsLibrary[type];
+        }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `questions_${Date.now()}.json`;
+        link.click();
+    }
+
+    // 7. استيراد مكتبة من ملف
+    function importFullLibrary(file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                let added = 0;
+                for (let type in data) {
+                    if (window.questionsLibrary[type] && Array.isArray(data[type])) {
+                        data[type].forEach(q => {
+                            if (!window.questionsLibrary[type].some(ex => ex.text === q.text)) {
+                                window.questionsLibrary[type].push(q);
+                                added++;
+                            }
+                        });
+                    }
                 }
-                
-            } catch(err) {
-                showGlobalMessage(`❌ خطأ في قراءة الملف: ${err.message}`, 'error');
+                if (added > 0) {
+                    saveMasterQuestionsLibrary();
+                    alert(`✅ تمت إضافة ${added} سؤال`);
+                    updateQuestionStats();
+                } else {
+                    alert("⚠️ لا توجد أسئلة جديدة");
+                }
+            } catch (err) {
+                alert("❌ خطأ: " + err.message);
             }
         };
-        reader.readAsText(file, 'UTF-8');
+        reader.readAsText(file);
     }
-    
-    // إضافة أزرار تصدير/استيراد المكتبة
+
+    // 8. إضافة أزرار الإدارة في الواجهة
     function addLibraryManagementButtons() {
-        const settingsCard = document.querySelector('.two-columns .card:last-child');
-        if(!settingsCard || document.getElementById('libraryManagementSection')) return;
-        
-        const libSection = document.createElement('div');
-        libSection.id = 'libraryManagementSection';
-        libSection.style.marginTop = '20px';
-        libSection.style.padding = '15px';
-        libSection.style.background = 'rgba(0,0,0,0.2)';
-        libSection.style.borderRadius = '28px';
-        libSection.innerHTML = `
-            <h3 style="font-size: 1rem; margin-bottom: 10px;">📚 إدارة المكتبة الدائمة</h3>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button id="exportLibraryBtn" style="background: #10b981;">📤 تصدير المكتبة كاملة</button>
-                <label for="importLibraryInput" style="background: #3b82f6; padding: 10px 20px; border-radius: 60px; cursor: pointer;">📥 استيراد مكتبة</label>
-                <input type="file" id="importLibraryInput" accept=".json" style="display:none;">
-                <button id="resetLibraryBtn" style="background: #dc2626;">🔄 إعادة تعيين المكتبة الأصلية</button>
-            </div>
-            <div id="libraryStatus" class="message-area" style="margin-top: 10px; font-size: 0.8rem;">
-                💾 جميع الأسئلة المضافة (يدوياً، تلقائياً، أو برفع ملف) تُحفظ نهائياً
+        const card = document.querySelector('.two-columns .card:last-child');
+        if (!card || document.getElementById('libraryManagementSection')) return;
+        const section = document.createElement('div');
+        section.id = 'libraryManagementSection';
+        section.style.cssText = 'margin-top:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:28px;';
+        section.innerHTML = `
+            <h3 style="margin-bottom:10px;">📚 إدارة المكتبة</h3>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button id="exportLibBtn" style="background:#10b981;">📤 تصدير</button>
+                <label for="importLibInput" style="background:#3b82f6; padding:10px 20px; border-radius:60px; cursor:pointer;">📥 استيراد</label>
+                <input type="file" id="importLibInput" accept=".json" style="display:none;">
             </div>
         `;
-        settingsCard.appendChild(libSection);
-        
-        document.getElementById('exportLibraryBtn')?.addEventListener('click', exportFullLibrary);
-        document.getElementById('importLibraryInput')?.addEventListener('change', (e) => {
-            if(e.target.files[0]) importFullLibrary(e.target.files[0]);
+        card.appendChild(section);
+        document.getElementById('exportLibBtn')?.addEventListener('click', exportFullLibrary);
+        document.getElementById('importLibInput')?.addEventListener('change', e => {
+            if (e.target.files[0]) importFullLibrary(e.target.files[0]);
             e.target.value = '';
         });
-        document.getElementById('resetLibraryBtn')?.addEventListener('click', resetToOriginalLibrary);
     }
-    
-    // إعادة تعيين المكتبة إلى النسخة الأصلية (مع حفظ الأسئلة المضافة من المستخدمين)
-    function resetToOriginalLibrary() {
-        if(confirm("⚠️ هل أنت متأكد؟ سيتم حذف جميع الأسئلة المضافة من المستخدمين والاحتفاظ فقط بالأسئلة الأصلية. هذا الإجراء لا يمكن التراجع عنه!")) {
-            
-            // إعادة تحميل الأسئلة الأصلية من المكتبة المدمجة
-            const originalOrthodox = window.originalOrthodoxQuestions || [...window.questionsLibrary.orthodox.slice(0, 30)];
-            const originalBible = window.originalBibleQuestions || [...window.questionsLibrary.bible.slice(0, 15)];
-            const originalHistory = window.originalHistoryQuestions || [...window.questionsLibrary.history.slice(0, 10)];
-            
-            // إعادة تعيين المكتبات
-            window.questionsLibrary.orthodox = [...originalOrthodox];
-            window.questionsLibrary.bible = [...originalBible];
-            window.questionsLibrary.history = [...originalHistory];
-            window.questionsLibrary.saints = [...window.originalSaintsQuestions || window.questionsLibrary.saints.slice(0, 5)];
-            window.questionsLibrary.hymns = [...window.originalHymnsQuestions || window.questionsLibrary.hymns.slice(0, 5)];
-            
-            // إعادة بناء المتنوع
-            window.questionsLibrary.mixed = [
-                ...window.questionsLibrary.orthodox.slice(0, 20),
-                ...window.questionsLibrary.bible.slice(0, 10),
-                ...window.questionsLibrary.history.slice(0, 10),
-                ...window.questionsLibrary.saints,
-                ...window.questionsLibrary.hymns
-            ];
-            
-            // حفظ التغييرات
-            saveMasterQuestionsLibrary();
-            addQuestionStatsDisplay();
-            showGlobalMessage("🔄 تم إعادة تعيين المكتبة إلى الأسئلة الأصلية", 'success');
-        }
-    }
-    
-    // ==========================================
-    // 4. رسالة عامة للواجهة
-    // ==========================================
-    
-    function showGlobalMessage(msg, type) {
-        const msgDiv = document.getElementById('libraryStatus') || document.getElementById('playersMsg');
-        if(msgDiv) {
-            msgDiv.innerHTML = msg;
-            msgDiv.style.background = type === 'error' ? '#dc262630' : (type === 'success' ? '#10b98130' : '#3b82f630');
-            setTimeout(() => {
-                if(msgDiv.innerHTML === msg) {
-                    if(msgDiv.id === 'libraryStatus') {
-                        msgDiv.innerHTML = '💾 جميع الأسئلة المضافة (يدوياً، تلقائياً، أو برفع ملف) تُحفظ نهائياً';
-                    }
-                    msgDiv.style.background = '';
-                }
-            }, 4000);
-        }
-    }
-    
-    // ==========================================
-    // 5. حفظ النسخة الأصلية من الأسئلة (للرجوع إليها)
-    // ==========================================
-    
-    function saveOriginalQuestionsBackup() {
-        window.originalOrthodoxQuestions = [...window.questionsLibrary.orthodox];
-        window.originalBibleQuestions = [...window.questionsLibrary.bible];
-        window.originalHistoryQuestions = [...window.questionsLibrary.history];
-        window.originalSaintsQuestions = [...window.questionsLibrary.saints];
-        window.originalHymnsQuestions = [...window.questionsLibrary.hymns];
-        
-        localStorage.setItem('orthodox_original_backup', JSON.stringify({
-            orthodox: window.originalOrthodoxQuestions,
-            bible: window.originalBibleQuestions,
-            history: window.originalHistoryQuestions,
-            saints: window.originalSaintsQuestions,
-            hymns: window.originalHymnsQuestions
-        }));
-    }
-    
-    // ==========================================
-    // 6. تهيئة النظام عند تحميل الصفحة
-    // ==========================================
-    
-    function initPermanentStorage() {
-        // محاولة تحميل المكتبة المحفوظة
-        const loaded = loadMasterQuestionsLibrary();
-        
-        if(!loaded) {
-            // إذا لم توجد مكتبة محفوظة، نحفظ النسخة الحالية كأساس
-            saveMasterQuestionsLibrary();
-            saveOriginalQuestionsBackup();
-            console.log("📚 تم إنشاء مكتبة أسئلة جديدة");
-        }
-        
-        // تحديث الإحصائيات
+
+    // 9. التهيئة الرئيسية
+    async function initPermanentStorage() {
+        await loadMasterQuestionsLibrary();
         addQuestionStatsDisplay();
-        
-        // إضافة أزرار إدارة المكتبة
-        setTimeout(() => {
-            addLibraryManagementButtons();
-        }, 500);
+        addLibraryManagementButtons();
     }
-    
-    // استدعاء التهيئة
+
+    // بدء التشغيل
     initPermanentStorage();
-    
-    // مراقبة أي إضافات جديدة للأسئلة وحفظها تلقائياً
-    const originalAddPlayer = addPlayer;
-    window.addPlayer = function() {
-        originalAddPlayer();
-        // لا علاقة بالأسئلة، فقط للتأكد من عدم كسر الكود
-    };
-    
-    console.log("الجزء الحادي عشر تم تحميله - نظام الحفظ الدائم للأسئلة جاهز");
-    console.log("💾 جميع الأسئلة المضافة ستحفظ نهائياً ولن تُحذف أبداً");
+    console.log("الجزء الحادي عشر المعدل يعمل - الآن الأسئلة تُحفظ على السيرفر");
 </script>
 
 </body>
